@@ -1,0 +1,988 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>ABYSS</title>
+<meta name="description" content="A statically typed systems programming language designed for mechanical sympathy, predictability, and raw performance." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1254 1254'%3E%3Cpolygon points='564.2,313.5 692.1,313.5 975.0,939.5 854.0,939.5 627.9,436.3 392.2,939.5 270.6,939.5' fill='%23FDFCFD'/%3E%3Ccircle cx='626.3' cy='705.1' r='67.5' fill='%23FDFCFD'/%3E%3C/svg%3E" />
+<style>
+:root {
+  --bg-color: #05070a;
+  --text-main: #f0f0f0;
+  --text-dim: #707070;
+  --text-muted: #3a3a3a;
+  --border-line: #181818;
+  --accent-white: #ffffff;
+  --font-sans: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html {
+  scroll-behavior: smooth;
+  background-color: #000000;
+  color: var(--text-main);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  width: 100%;
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+
+body {
+  background-color: var(--bg-color);
+  min-height: 100vh;
+  min-height: 100dvh;
+  width: 100%;
+  max-width: 100vw;
+  position: relative;
+  overflow-x: hidden;
+  transition: background-color 0.1s ease-out;
+}
+
+.depth-track-system {
+  position: fixed;
+  right: 1.25rem;
+  top: 14vh;
+  z-index: 998;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.depth-rail {
+  width: 2px;
+  height: 52vh;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 2px;
+  overflow: hidden;
+  position: relative;
+}
+
+.depth-rail-fill {
+  width: 100%;
+  height: 0%;
+  background: #ffffff;
+  box-shadow: 0 0 6px rgba(255, 255, 255, 0.7);
+  border-radius: 2px;
+}
+
+.depth-dots-lane {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 24px;
+}
+
+.depth-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.15);
+  transition: all 0.3s ease;
+}
+
+.depth-dot.lit {
+  background: #ffffff;
+  box-shadow: 0 0 8px #ffffff, 0 0 18px rgba(255, 255, 255, 0.85);
+  transform: scale(1.6);
+}
+
+.depth-tracker {
+  position: fixed;
+  right: 1.65rem;
+  top: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  pointer-events: none;
+  font-family: var(--font-mono);
+  will-change: transform;
+}
+
+.depth-data {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.95);
+  text-align: right;
+}
+
+.depth-meters {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), text-shadow 0.25s ease, opacity 0.2s ease;
+}
+
+.depth-meters.infinite-mode {
+  transform: scale(1.18);
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.95), 0 0 22px rgba(255, 255, 255, 0.75);
+}
+
+@keyframes morph-infinity {
+  0% { transform: scale(0.85); opacity: 0.4; filter: blur(2px); }
+  50% { transform: scale(1.3); opacity: 1; filter: blur(0px); }
+  100% { transform: scale(1.18); opacity: 1; filter: blur(0px); }
+}
+
+.depth-meters.infinite-transition {
+  animation: morph-infinity 0.45s ease-out forwards;
+}
+
+.depth-zone {
+  font-size: 0.62rem;
+  letter-spacing: 0.12em;
+  color: #555555;
+  text-transform: uppercase;
+  margin-top: 0.15rem;
+  transition: color 0.2s ease;
+}
+
+.depth-arrow-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.7));
+  height: 10px;
+  width: 10px;
+}
+
+.depth-arrow {
+  width: 10px;
+  height: 10px;
+  display: block;
+  animation: arrow-point 1.2s infinite ease-in-out;
+}
+
+@keyframes arrow-point {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(3px); }
+}
+
+.container {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 0 2rem;
+  padding-right: 6.5rem;
+  width: 100%;
+}
+
+.stage-section {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 7rem 0;
+  position: relative;
+}
+
+.depth-tag {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.15em;
+  color: var(--text-dim);
+  margin-bottom: 1.25rem;
+  text-transform: uppercase;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.depth-tag::before {
+  content: "";
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  background: #ffffff;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.stage-title {
+  font-size: clamp(1.85rem, 4.5vw, 3.25rem);
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  line-height: 1.15;
+  color: #ffffff;
+  margin-bottom: 1.25rem;
+  word-break: break-word;
+}
+
+.stage-desc {
+  font-size: clamp(0.92rem, 2vw, 1.05rem);
+  line-height: 1.7;
+  color: #999999;
+  max-width: 680px;
+  margin-bottom: 2.5rem;
+}
+
+.code-box {
+  background: #030303;
+  border: 1px solid #141414;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 16px 32px rgba(0, 0, 0, 0.85);
+  width: 100%;
+  max-width: 100%;
+}
+
+.code-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1.25rem;
+  background: #080808;
+  border-bottom: 1px solid #141414;
+}
+
+.code-name {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: #888888;
+}
+
+.code-copy {
+  background: transparent;
+  border: none;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: #666666;
+  cursor: pointer;
+  transition: color 0.15s ease;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
+.code-copy:hover {
+  color: #ffffff;
+}
+
+.code-content {
+  padding: 1.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+  line-height: 1.7;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  color: #dcdcdc;
+}
+
+.kw { color: #ffffff; font-weight: 600; }
+.ty { color: #8e8e8e; }
+.fn { color: #cfcfcf; }
+.str { color: #aaaaaa; }
+.num { color: #6e6e6e; }
+.op { color: #777777; }
+
+.scroll-prompt {
+  margin-top: 3.5rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: #555555;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+.scroll-arrow {
+  animation: pulse-down 1.8s infinite ease-in-out;
+}
+
+@keyframes pulse-down {
+  0%, 100% { transform: translateY(0); opacity: 0.4; }
+  50% { transform: translateY(6px); opacity: 1; }
+}
+
+.spec-pills {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-bottom: 2.5rem;
+}
+
+.pill {
+  padding: 0.4rem 0.85rem;
+  background: #0a0a0a;
+  border: 1px solid #181818;
+  border-radius: 4px;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: #888888;
+}
+
+.the-void {
+  min-height: 220vh;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #000000;
+}
+
+.void-pulse {
+  width: 1px;
+  height: 120px;
+  background: linear-gradient(to bottom, transparent, rgba(255, 255, 255, 0.2), transparent);
+  animation: pulse-down 2.2s infinite ease-in-out;
+}
+
+.revelation {
+  height: 100vh;
+  height: 100dvh;
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  background: #000000;
+  position: relative;
+  padding: 0 1.5rem;
+  box-sizing: border-box;
+}
+
+.revelation-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.abyss-main-title {
+  font-size: clamp(4.5rem, 13vw, 9.5rem);
+  font-weight: 900;
+  letter-spacing: 0.18em;
+  line-height: 1;
+  color: #ffffff;
+  margin-bottom: 0.5rem;
+  text-indent: 0.18em;
+}
+
+.abyss-sub-title {
+  font-family: var(--font-mono);
+  font-size: clamp(0.85rem, 1.8vw, 1.15rem);
+  letter-spacing: 0.35em;
+  text-transform: uppercase;
+  color: #4a4a4a;
+  margin-bottom: 2.75rem;
+  text-indent: 0.35em;
+}
+
+.revelation-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.25rem;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+}
+
+.revelation-link {
+  color: #ffffff;
+  text-decoration: none;
+  border-bottom: 1px solid #333333;
+  padding-bottom: 2px;
+  transition: all 0.15s ease;
+  touch-action: manipulation;
+}
+
+.revelation-link:hover {
+  border-color: #ffffff;
+}
+
+.bottom-nav {
+  position: absolute;
+  bottom: 2.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: #333333;
+}
+
+.bottom-nav a {
+  color: #555555;
+  text-decoration: none;
+  transition: color 0.15s ease;
+  touch-action: manipulation;
+}
+
+.bottom-nav a:hover {
+  color: #ffffff;
+}
+
+@media (max-width: 1024px) {
+  .container {
+    padding: 0 2rem;
+    padding-right: 6rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding: 0 1.5rem;
+    padding-right: 5.25rem;
+  }
+  .stage-section {
+    padding: 4.5rem 0;
+  }
+  .depth-track-system {
+    right: 0.85rem;
+    top: 16vh;
+    top: 16dvh;
+  }
+  .depth-rail {
+    height: 48vh;
+    height: 48dvh;
+  }
+  .depth-dots-lane {
+    margin-top: 18px;
+  }
+  .depth-tracker {
+    right: 1.2rem;
+    top: 0;
+    gap: 0.45rem;
+  }
+  .depth-meters {
+    font-size: 0.92rem;
+  }
+  .depth-zone {
+    font-size: 0.52rem;
+  }
+  .code-bar {
+    padding: 0.65rem 1rem;
+  }
+  .code-content {
+    padding: 1.15rem 1rem;
+    font-size: 0.8rem;
+  }
+  .the-void {
+    min-height: 160vh;
+  }
+  .abyss-main-title {
+    font-size: clamp(3.75rem, 13vw, 7rem);
+    letter-spacing: 0.14em;
+    text-indent: 0.14em;
+  }
+  .abyss-sub-title {
+    font-size: 0.95rem;
+    letter-spacing: 0.28em;
+    text-indent: 0.28em;
+    margin-bottom: 2.25rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .container {
+    padding: 0 1rem;
+    padding-right: 4.5rem;
+  }
+  .stage-section {
+    padding: 3.5rem 0;
+  }
+  .stage-title {
+    font-size: clamp(1.5rem, 6.5vw, 2.1rem);
+    margin-bottom: 0.85rem;
+  }
+  .stage-desc {
+    font-size: 0.88rem;
+    line-height: 1.6;
+    margin-bottom: 1.75rem;
+  }
+  .depth-track-system {
+    right: 0.65rem;
+    top: 18vh;
+    top: 18dvh;
+  }
+  .depth-rail {
+    height: 44vh;
+    height: 44dvh;
+  }
+  .depth-dots-lane {
+    margin-top: 16px;
+  }
+  .depth-tracker {
+    right: 0.95rem;
+    top: 0;
+    gap: 0.35rem;
+  }
+  .depth-data {
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    padding: 3px 6px;
+    border-radius: 4px;
+  }
+  .depth-meters {
+    font-size: 0.82rem;
+  }
+  .depth-zone {
+    font-size: 0.46rem;
+    letter-spacing: 0.08em;
+  }
+  .spec-pills {
+    gap: 0.4rem;
+    margin-bottom: 1.75rem;
+  }
+  .pill {
+    padding: 0.3rem 0.6rem;
+    font-size: 0.68rem;
+  }
+  .code-bar {
+    padding: 0.55rem 0.85rem;
+  }
+  .code-name {
+    font-size: 0.72rem;
+  }
+  .code-copy {
+    font-size: 0.72rem;
+    padding: 4px 6px;
+  }
+  .code-content {
+    padding: 0.85rem 0.75rem;
+    font-size: 0.75rem;
+    line-height: 1.6;
+  }
+  .scroll-prompt {
+    margin-top: 2rem;
+    font-size: 0.68rem;
+  }
+  .the-void {
+    min-height: 130vh;
+  }
+  .abyss-main-title {
+    font-size: clamp(2.75rem, 15vw, 4.25rem);
+    letter-spacing: 0.1em;
+    text-indent: 0.1em;
+  }
+  .abyss-sub-title {
+    font-size: 0.8rem;
+    letter-spacing: 0.22em;
+    text-indent: 0.22em;
+    margin-bottom: 2rem;
+  }
+  .bottom-nav {
+    bottom: 1.5rem;
+    font-size: 0.7rem;
+    gap: 0.75rem;
+  }
+}
+
+@media (max-width: 360px) {
+  .container {
+    padding: 0 0.75rem;
+    padding-right: 4.2rem;
+  }
+  .depth-tracker {
+    right: 0.85rem;
+    gap: 0.25rem;
+  }
+  .depth-meters {
+    font-size: 0.76rem;
+  }
+  .depth-zone {
+    font-size: 0.42rem;
+  }
+  .stage-title {
+    font-size: 1.4rem;
+  }
+  .code-content {
+    font-size: 0.7rem;
+  }
+  .abyss-main-title {
+    font-size: 2.5rem;
+  }
+}
+
+@media (max-height: 520px) {
+  .stage-section {
+    padding: 2.5rem 0;
+  }
+  .depth-track-system {
+    top: 8vh;
+  }
+  .depth-rail {
+    height: 38vh;
+  }
+  .depth-dots-lane {
+    margin-top: 10px;
+  }
+  .bottom-nav {
+    bottom: 0.75rem;
+  }
+}
+</style>
+</head>
+<body>
+
+<div class="depth-track-system">
+  <div class="depth-rail">
+    <div class="depth-rail-fill" id="depth-bar"></div>
+  </div>
+  <div class="depth-dots-lane">
+    <div class="depth-dot" id="depth-dot"></div>
+  </div>
+</div>
+
+<div class="depth-tracker" id="depth-tracker">
+  <div class="depth-data">
+    <div class="depth-meters" id="depth-display">0m</div>
+    <div class="depth-zone" id="zone-display">SUNLIGHT ZONE</div>
+  </div>
+  <div class="depth-arrow-wrap">
+    <svg class="depth-arrow" width="10" height="10" viewBox="0 0 10 10" fill="currentColor">
+      <polygon points="1,1 9,5 1,9"/>
+    </svg>
+  </div>
+</div>
+
+<section class="stage-section" id="stage-0" data-depth="0" data-zone="SUNLIGHT ZONE">
+  <div class="container">
+    <div class="depth-tag">Depth 0m &bull; Sunlight Zone</div>
+    <h2 class="stage-title">Pure, Unadorned Code.</h2>
+    <p class="stage-desc">
+      No ceremony, no boilerplate headers, no preprocessor indirection. Just deterministic syntax that translates directly to mechanical execution.
+    </p>
+
+    <div class="code-box">
+      <div class="code-bar">
+        <span class="code-name">main.a</span>
+        <button class="code-copy" data-target="code-0">Copy</button>
+      </div>
+      <div class="code-content">
+<pre><code id="code-0"><span class="kw">import</span> print <span class="kw">from</span> <span class="str">"std/io"</span>
+
+<span class="fn">main</span> <span class="op">::</span> <span class="kw">fn</span>() {
+    <span class="str">"Hello, world!"</span>.<span class="fn">print</span>()
+}</code></pre>
+      </div>
+    </div>
+
+    <div class="scroll-prompt">
+      <span class="scroll-arrow">&darr;</span>
+      <span>Scroll to descend into the deep</span>
+    </div>
+  </div>
+</section>
+
+<section class="stage-section" id="stage-200" data-depth="-200" data-zone="TWILIGHT ZONE">
+  <div class="container">
+    <div class="depth-tag">Depth -200m &bull; Twilight Zone</div>
+    <h2 class="stage-title">Declaration-First Syntax.</h2>
+    <p class="stage-desc">
+      Designed for rapid visual parsing. Ergonomics inspired by Odin and Jai combine with orthogonal grammar rules, ensuring the compiler and human reader understand every construct without ambiguity.
+    </p>
+
+    <div class="spec-pills">
+      <span class="pill">Orthogonal Grammar</span>
+      <span class="pill">Method Call Syntax</span>
+      <span class="pill">Zero Header Files</span>
+      <span class="pill">Struct Composition</span>
+    </div>
+
+    <div class="code-box">
+      <div class="code-bar">
+        <span class="code-name">geometry.a</span>
+        <button class="code-copy" data-target="code-200">Copy</button>
+      </div>
+      <div class="code-content">
+<pre><code id="code-200"><span class="kw">import</span> println_i32 <span class="kw">from</span> <span class="str">"std/io"</span>
+
+<span class="ty">Rect</span> <span class="op">::</span> <span class="kw">struct</span> {
+    w, h <span class="ty">i32</span>
+
+    <span class="fn">area</span> <span class="op">::</span> <span class="kw">fn</span>(self <span class="ty">&Self</span>) <span class="ty">i32</span> {
+        self.w <span class="op">*</span> self.h
+    }
+
+    <span class="fn">scale</span> <span class="op">::</span> <span class="kw">fn</span>(self <span class="ty">&Self</span>, factor <span class="ty">i32</span>) <span class="ty">i32</span> {
+        self.w <span class="op">*</span> factor
+    }
+}
+
+<span class="fn">main</span> <span class="op">::</span> <span class="kw">fn</span>() {
+    r: <span class="ty">Rect</span> <span class="op">=</span> .{ w: <span class="num">10</span>, h: <span class="num">20</span> }
+    r.<span class="fn">area</span>().<span class="fn">println_i32</span>()
+    r.<span class="fn">scale</span>(<span class="num">3</span>).<span class="fn">println_i32</span>()
+}</code></pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="stage-section" id="stage-4000" data-depth="-4000" data-zone="MIDNIGHT ZONE">
+  <div class="container">
+    <div class="depth-tag">Depth -4,000m &bull; Midnight Zone</div>
+    <h2 class="stage-title">Linear Memory & Unification Types.</h2>
+    <p class="stage-desc">
+      Bidirectional Hindley-Milner type inference removes type verbosity while enforcing strict sizing from i8 to i64 and f32 to f64. Fast bump Arena allocators replace unpredictable garbage collection with explicit lifetimes.
+    </p>
+
+    <div class="spec-pills">
+      <span class="pill">Arena Allocators</span>
+      <span class="pill">Hindley-Milner Engine</span>
+      <span class="pill">Zero Garbage Collector</span>
+      <span class="pill">Dense Sized Types</span>
+    </div>
+
+    <div class="code-box">
+      <div class="code-bar">
+        <span class="code-name">allocator.a</span>
+        <button class="code-copy" data-target="code-4000">Copy</button>
+      </div>
+      <div class="code-content">
+<pre><code id="code-4000"><span class="kw">import</span> Arena <span class="kw">from</span> <span class="str">"std/allocator"</span>
+<span class="kw">import</span> Vec <span class="kw">from</span> <span class="str">"std/collections/vec"</span>
+<span class="kw">import</span> print <span class="kw">from</span> <span class="str">"std/io"</span>
+
+<span class="fn">main</span> <span class="op">::</span> <span class="kw">fn</span>() {
+    arena <span class="op">:=</span> <span class="ty">Arena</span>.<span class="fn">new</span>(<span class="num">1024</span> <span class="op">*</span> <span class="num">1024</span> <span class="op">*</span> <span class="num">16</span>)
+    items <span class="op">:=</span> <span class="ty">Vec</span>.<span class="fn">new</span>(<span class="op">&</span>arena)
+
+    items.<span class="fn">push</span>(<span class="num">1024</span>)
+    items.<span class="fn">push</span>(<span class="num">2048</span>)
+    items.<span class="fn">push</span>(<span class="num">4096</span>)
+
+    <span class="str">"Allocated contiguous elements without runtime pauses."</span>.<span class="fn">print</span>()
+}</code></pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="stage-section" id="stage-6000" data-depth="-6000" data-zone="ABYSSAL ZONE">
+  <div class="container">
+    <div class="depth-tag">Depth -6,000m &bull; Abyssal Zone</div>
+    <h2 class="stage-title">Data-Oriented Compiler Architecture.</h2>
+    <p class="stage-desc">
+      Pointer-heavy AST graphs are banished. The 100% self-hosted compiler stores syntax nodes in flat arena tables identified by dense numeric HirId and TypeId indices, maximizing CPU L1 cache locality, incremental throughput, and emitting deterministic GNU C99.
+    </p>
+
+    <div class="spec-pills">
+      <span class="pill">Data-Oriented (DOP)</span>
+      <span class="pill">Dense HirId Tables</span>
+      <span class="pill">Deterministic GNU C99</span>
+      <span class="pill">Zero-Cost C ABI</span>
+    </div>
+
+    <div class="code-box">
+      <div class="code-bar">
+        <span class="code-name">compiler_engine.a</span>
+        <button class="code-copy" data-target="code-6000">Copy</button>
+      </div>
+      <div class="code-content">
+<pre><code id="code-6000"><span class="ty">HirId</span>  <span class="op">::</span> <span class="ty">u32</span>
+<span class="ty">TypeId</span> <span class="op">::</span> <span class="ty">u32</span>
+
+<span class="ty">HirNode</span> <span class="op">::</span> <span class="kw">struct</span> {
+    id   <span class="ty">HirId</span>
+    ty   <span class="ty">TypeId</span>
+    span <span class="ty">Span</span>
+}
+
+<span class="fn">compile_unit</span> <span class="op">::</span> <span class="kw">fn</span>(src <span class="ty">&u8</span>) <span class="ty">i32</span> {
+    ast  <span class="op">:=</span> <span class="fn">parse</span>(src)
+    hir  <span class="op">:=</span> <span class="fn">lower_to_flat_arena</span>(ast)
+    <span class="fn">unify_types</span>(hir)
+    <span class="fn">emit_gnu_c99</span>(hir)
+}</code></pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="the-void" id="stage-void" data-depth="-11000" data-zone="CHALLENGER DEEP">
+  <div class="void-pulse"></div>
+</div>
+
+<section class="revelation" id="stage-revelation" data-depth="-Infinity" data-zone="THE ABYSS">
+  <div class="revelation-center">
+    <h1 class="abyss-main-title">ABYSS</h1>
+    <p class="abyss-sub-title">programming language</p>
+
+    <div class="revelation-actions">
+      <a href="https://github.com/jhosein58/abyss" target="_blank" rel="noopener noreferrer" class="revelation-link">github</a>
+    </div>
+  </div>
+
+  <div class="bottom-nav">
+    <a href="#stage-0">0m</a>
+    <span>&bull;</span>
+    <a href="/">root</a>
+    <span>&bull;</span>
+    <a href="https://github.com/jhosein58/abyss/blob/main/LICENSE" target="_blank" rel="noopener noreferrer">mit</a>
+  </div>
+</section>
+
+<script>
+const depthDisplay = document.getElementById('depth-display');
+const zoneDisplay = document.getElementById('zone-display');
+const depthBar = document.getElementById('depth-bar');
+const depthTracker = document.getElementById('depth-tracker');
+const depthDot = document.getElementById('depth-dot');
+const depthRail = document.querySelector('.depth-rail');
+
+const stage0 = document.getElementById('stage-0');
+const stage200 = document.getElementById('stage-200');
+const stage4000 = document.getElementById('stage-4000');
+const stage6000 = document.getElementById('stage-6000');
+const stageVoid = document.getElementById('stage-void');
+const stageRev = document.getElementById('stage-revelation');
+
+const stages = [
+  { el: stage0, depth: 0 },
+  { el: stage200, depth: -200 },
+  { el: stage4000, depth: -4000 },
+  { el: stage6000, depth: -6000 },
+  { el: stageVoid, depth: -11000 }
+];
+
+function getZoneName(depth) {
+  if (depth >= -200) return 'SUNLIGHT ZONE';
+  if (depth >= -1000) return 'TWILIGHT ZONE';
+  if (depth >= -4000) return 'MIDNIGHT ZONE';
+  if (depth >= -6000) return 'ABYSSAL ZONE';
+  if (depth > -10500) return 'HADAL ZONE';
+  return 'CHALLENGER DEEP';
+}
+
+let wasInfinite = false;
+
+function updateHUD() {
+  const scrollTop = window.scrollY || document.documentElement.scrollTop;
+  const s0Top = stage0 ? stage0.offsetTop : 0;
+  const sVoidTop = stageVoid ? stageVoid.offsetTop : 3000;
+  const sRevTop = stageRev ? stageRev.offsetTop : 5000;
+
+  const railRect = depthRail.getBoundingClientRect();
+  const dotRect = depthDot.getBoundingClientRect();
+  const trackerHeight = depthTracker.offsetHeight || 30;
+
+  const railTop = railRect.top;
+  const railBottom = railRect.bottom;
+  const dotCenter = dotRect.top + dotRect.height / 2;
+
+  let targetY = railTop;
+
+  if (scrollTop <= sVoidTop) {
+    const oceanRatio = sVoidTop > s0Top ? Math.min(Math.max((scrollTop - s0Top) / (sVoidTop - s0Top), 0), 1) : 0;
+    targetY = railTop + oceanRatio * (railBottom - railTop);
+    const fillHeight = Math.max(0, targetY - railTop);
+    depthBar.style.height = fillHeight + 'px';
+    depthDot.classList.remove('lit');
+
+    let currentDepth = 0;
+    for (let i = 0; i < stages.length - 1; i++) {
+      const top1 = stages[i].el.offsetTop;
+      const top2 = stages[i + 1].el.offsetTop;
+      if (scrollTop >= top1 && scrollTop <= top2) {
+        const segRatio = top2 > top1 ? (scrollTop - top1) / (top2 - top1) : 0;
+        currentDepth = Math.round(stages[i].depth + segRatio * (stages[i + 1].depth - stages[i].depth));
+        break;
+      } else if (scrollTop > top2 && i === stages.length - 2) {
+        currentDepth = -11000;
+      }
+    }
+    if (scrollTop < stages[0].el.offsetTop) {
+      currentDepth = 0;
+    }
+
+    depthDisplay.textContent = currentDepth.toLocaleString() + 'm';
+    depthDisplay.classList.remove('infinite-mode', 'infinite-transition');
+    zoneDisplay.textContent = getZoneName(currentDepth);
+    zoneDisplay.style.color = '#555555';
+    wasInfinite = false;
+  } else {
+    const voidRatio = sRevTop > sVoidTop ? Math.min(Math.max((scrollTop - sVoidTop) / (sRevTop - sVoidTop), 0), 1) : 1;
+    depthBar.style.height = (railBottom - railTop) + 'px';
+    targetY = railBottom + voidRatio * (dotCenter - railBottom);
+
+    if (voidRatio >= 0.92) {
+      depthDot.classList.add('lit');
+    } else {
+      depthDot.classList.remove('lit');
+    }
+
+    zoneDisplay.textContent = 'THE ABYSS';
+    zoneDisplay.style.color = '#888888';
+
+    if (voidRatio < 0.88) {
+      wasInfinite = false;
+      depthDisplay.classList.remove('infinite-mode', 'infinite-transition');
+      const surgeRatio = voidRatio / 0.88;
+      const exponent = Math.pow(surgeRatio, 4.2);
+      const acceleratedDepth = Math.round(11000 + exponent * 98000000000);
+      const jitter = Math.floor(Math.random() * (exponent * 8000000 + 49));
+      const val = acceleratedDepth + jitter;
+      depthDisplay.textContent = '-' + val.toLocaleString() + 'm';
+    } else {
+      if (!wasInfinite) {
+        wasInfinite = true;
+        depthDisplay.classList.remove('infinite-transition');
+        void depthDisplay.offsetWidth;
+        depthDisplay.classList.add('infinite-transition');
+      }
+      depthDisplay.classList.add('infinite-mode');
+      depthDisplay.textContent = '-∞';
+    }
+  }
+
+  const trackerY = targetY - (trackerHeight / 2);
+  depthTracker.style.transform = 'translateY(' + trackerY + 'px)';
+
+  const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+  const scrollRatio = docHeight > 0 ? Math.min(Math.max(scrollTop / docHeight, 0), 1) : 0;
+  const r = Math.max(0, Math.round(5 * (1 - scrollRatio * 1.5)));
+  const g = Math.max(0, Math.round(7 * (1 - scrollRatio * 1.5)));
+  const b = Math.max(0, Math.round(10 * (1 - scrollRatio * 1.5)));
+  document.body.style.backgroundColor = 'rgb(' + r + ',' + g + ',' + b + ')';
+}
+
+window.addEventListener('scroll', updateHUD, { passive: true });
+window.addEventListener('resize', updateHUD);
+window.addEventListener('orientationchange', updateHUD);
+window.addEventListener('DOMContentLoaded', updateHUD);
+window.addEventListener('load', updateHUD);
+updateHUD();
+
+document.querySelectorAll('.code-copy').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const targetId = btn.getAttribute('data-target');
+    const el = document.getElementById(targetId);
+    if (!el) return;
+
+    navigator.clipboard.writeText(el.innerText.trim()).then(() => {
+      const old = btn.textContent;
+      btn.textContent = 'Copied!';
+      setTimeout(() => {
+        btn.textContent = old;
+      }, 1800);
+    });
+  });
+});
+</script>
+</body>
+</html>
