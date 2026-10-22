@@ -434,64 +434,65 @@ body {
   margin: 2.25rem 0;
 }
 
-.markdown-body code:not([class*="language-"]) {
-  background: #0e0e0e;
+.markdown-body :not(pre) > code {
+  background: #141414;
   color: #f4f4f5;
-  padding: 0.15rem 0.38rem;
+  padding: 0.18rem 0.42rem;
   border-radius: 4px;
   font-family: var(--font-mono);
   font-size: 0.86em;
-  border: none;
+  border: 1px solid #222222;
 }
 
 .code-container {
-  background: #000000;
-  border: none;
-  border-radius: 0;
-  margin: 1.25rem 0;
+  background: #080808;
+  border: 1px solid #1c1c1c;
+  border-radius: 8px;
+  margin: 1.75rem 0;
   overflow: hidden;
-  box-shadow: none;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.75);
 }
 
 .code-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.35rem 0.25rem;
-  background: transparent;
-  border: none;
-  margin-bottom: 0.15rem;
+  padding: 0.5rem 1rem;
+  background: #0d0d0d;
+  border-bottom: 1px solid #1c1c1c;
 }
 
 .code-lang {
   font-family: var(--font-mono);
-  font-size: 0.68rem;
+  font-size: 0.72rem;
   font-weight: 600;
-  color: #52525b;
+  color: #71717a;
   text-transform: uppercase;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.08em;
 }
 
 .code-copy-btn {
-  background: transparent;
-  border: none;
-  color: #52525b;
+  background: #080808;
+  border: 1px solid #222222;
+  color: #a1a1aa;
   font-family: var(--font-mono);
-  font-size: 0.68rem;
-  padding: 0.15rem 0.35rem;
-  border-radius: 3px;
+  font-size: 0.72rem;
+  padding: 0.25rem 0.6rem;
+  border-radius: 4px;
   cursor: pointer;
-  transition: color 0.15s ease;
+  transition: all 0.15s ease;
   touch-action: manipulation;
 }
 
 .code-copy-btn:hover {
   color: #ffffff;
+  border-color: #383838;
+  background: #141414;
 }
 
 .markdown-body pre {
   margin: 0;
-  padding: 0.6rem 0.25rem 0.85rem 0.25rem;
+  padding: 1.25rem;
   font-family: var(--font-mono);
   font-size: 0.86rem;
   line-height: 1.65;
@@ -501,12 +502,21 @@ body {
   color: #e4e4e7;
 }
 
-.markdown-body pre code {
+.markdown-body pre code,
+.code-container pre code,
+code.code-content {
+  all: unset;
+  display: block;
   font-family: inherit;
   font-size: inherit;
-  background: transparent;
-  padding: 0;
-  border: none;
+  line-height: inherit;
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  color: inherit;
 }
 
 .table-wrap {
@@ -942,7 +952,7 @@ function renderFallbackMarkdown(md) {
         else if (codeLang === 'sh' || codeLang === 'bash' || codeLang === 'shell') highlighted = highlightShell(rawCode);
         else highlighted = escapeHtml(rawCode);
 
-        html += '<div class="code-container"><div class="code-header"><span class="code-lang">' + (codeLang || 'text') + '</span><button class="code-copy-btn">Copy</button></div><pre><code>' + highlighted + '</code></pre></div>';
+        html += '<div class="code-container"><div class="code-header"><span class="code-lang">' + (codeLang || 'text') + '</span><button class="code-copy-btn">Copy</button></div><pre><code class="code-content">' + highlighted + '</code></pre></div>';
       }
       continue;
     }
@@ -1007,7 +1017,7 @@ function postProcessHtml(container) {
 
     const wrap = document.createElement('div');
     wrap.className = 'code-container';
-    wrap.innerHTML = '<div class="code-header"><span class="code-lang">' + lang + '</span><button class="code-copy-btn">Copy</button></div><pre><code>' + highlighted + '</code></pre>';
+    wrap.innerHTML = '<div class="code-header"><span class="code-lang">' + lang + '</span><button class="code-copy-btn">Copy</button></div><pre><code class="code-content">' + highlighted + '</code></pre>';
     pre.replaceWith(wrap);
   });
 
