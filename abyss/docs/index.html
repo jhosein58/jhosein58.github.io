@@ -1,0 +1,1225 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>Into the Abyss &bull; Official Documentation</title>
+<meta name="description" content="Official documentation and guide for the Abyss programming language." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1254 1254'%3E%3Cpolygon points='564.2,313.5 692.1,313.5 975.0,939.5 854.0,939.5 627.9,436.3 392.2,939.5 270.6,939.5' fill='%23FDFCFD'/%3E%3Ccircle cx='626.3' cy='705.1' r='67.5' fill='%23FDFCFD'/%3E%3C/svg%3E" />
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<style>
+:root {
+  --bg-main: #05070a;
+  --bg-surface: #0a0e17;
+  --bg-sidebar: #060910;
+  --bg-card: #0b101c;
+  --bg-code: #070a12;
+  --border: #151c2c;
+  --border-focus: #28354d;
+  --text-main: #f1f5f9;
+  --text-muted: #94a3b8;
+  --text-dim: #64748b;
+  --accent: #ffffff;
+  --accent-cyan: #38bdf8;
+  --accent-indigo: #818cf8;
+  --font-sans: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+  --sidebar-w: 280px;
+  --toc-w: 240px;
+  --topbar-h: 60px;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html {
+  scroll-behavior: smooth;
+  background-color: var(--bg-main);
+  color: var(--text-main);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  background-color: var(--bg-main);
+  min-height: 100vh;
+  min-height: 100dvh;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.topbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--topbar-h);
+  background: rgba(5, 7, 10, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--border);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 1.5rem;
+}
+
+.topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.brand-link {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  text-decoration: none;
+  color: #ffffff;
+}
+
+.brand-logo {
+  width: 20px;
+  height: 20px;
+}
+
+.brand-title {
+  font-family: var(--font-sans);
+  font-weight: 800;
+  font-size: 1.1rem;
+  letter-spacing: 0.08em;
+  color: #ffffff;
+}
+
+.brand-badge {
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--accent-cyan);
+  background: rgba(56, 189, 248, 0.1);
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+}
+
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--text-dim);
+}
+
+.breadcrumb-sep {
+  color: #334155;
+}
+
+.breadcrumb-active {
+  color: var(--text-muted);
+}
+
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.topbar-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.45rem 0.85rem;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  text-decoration: none;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  transition: all 0.15s ease;
+  touch-action: manipulation;
+}
+
+.topbar-btn:hover {
+  color: #ffffff;
+  border-color: var(--border-focus);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.menu-toggle {
+  display: none;
+  background: transparent;
+  border: 1px solid var(--border);
+  color: #ffffff;
+  padding: 0.5rem;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.layout {
+  display: flex;
+  margin-top: var(--topbar-h);
+  min-height: calc(100vh - var(--topbar-h));
+  position: relative;
+}
+
+.sidebar {
+  width: var(--sidebar-w);
+  flex-shrink: 0;
+  background: var(--bg-sidebar);
+  border-right: 1px solid var(--border);
+  position: fixed;
+  top: var(--topbar-h);
+  bottom: 0;
+  left: 0;
+  overflow-y: auto;
+  padding: 1.25rem 1rem 3rem 1rem;
+  z-index: 50;
+  transition: transform 0.25s ease;
+}
+
+.search-box {
+  margin-bottom: 1.5rem;
+  position: relative;
+}
+
+.search-input {
+  width: 100%;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.55rem 0.75rem 0.55rem 2.2rem;
+  font-family: var(--font-sans);
+  font-size: 0.82rem;
+  color: #ffffff;
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+
+.search-input:focus {
+  border-color: var(--accent-cyan);
+}
+
+.search-input::placeholder {
+  color: var(--text-dim);
+}
+
+.search-icon {
+  position: absolute;
+  left: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-dim);
+  pointer-events: none;
+}
+
+.nav-group {
+  margin-bottom: 1.5rem;
+}
+
+.nav-group-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-bottom: 0.5rem;
+  padding: 0 0.5rem;
+}
+
+.nav-group-badge {
+  font-size: 0.6rem;
+  color: #fb923c;
+  background: rgba(251, 146, 60, 0.1);
+  padding: 0.1rem 0.35rem;
+  border-radius: 3px;
+  font-weight: 600;
+}
+
+.nav-items {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.nav-link {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.5rem 0.65rem;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  text-decoration: none;
+  transition: all 0.15s ease;
+  touch-action: manipulation;
+}
+
+.nav-link:hover:not(.disabled) {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.nav-link.active {
+  color: #ffffff;
+  background: rgba(56, 189, 248, 0.1);
+  border-left: 2px solid var(--accent-cyan);
+  font-weight: 600;
+}
+
+.nav-link.disabled {
+  color: #475569;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.main-content {
+  flex: 1;
+  margin-left: var(--sidebar-w);
+  margin-right: var(--toc-w);
+  padding: 3rem 4rem 6rem 4rem;
+  min-width: 0;
+  display: flex;
+  justify-content: center;
+}
+
+.content-article {
+  width: 100%;
+  max-width: 820px;
+}
+
+.doc-loader {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  color: var(--text-dim);
+  gap: 0.75rem;
+}
+
+.doc-spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--border);
+  border-top-color: #ffffff;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.markdown-body {
+  font-size: 1rem;
+  line-height: 1.75;
+  color: var(--text-muted);
+}
+
+.markdown-body h1 {
+  font-size: clamp(2rem, 3.5vw, 2.6rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: #ffffff;
+  line-height: 1.2;
+  margin-bottom: 1.25rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.markdown-body h2 {
+  font-size: clamp(1.4rem, 2.5vw, 1.75rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: #ffffff;
+  margin-top: 2.75rem;
+  margin-bottom: 1rem;
+  padding-bottom: 0.4rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.markdown-body h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #ffffff;
+  margin-top: 2rem;
+  margin-bottom: 0.75rem;
+}
+
+.markdown-body p {
+  margin-bottom: 1.35rem;
+  color: #cbd5e1;
+}
+
+.markdown-body strong {
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.markdown-body em {
+  color: #94a3b8;
+}
+
+.markdown-body a {
+  color: var(--accent-cyan);
+  text-decoration: none;
+  border-bottom: 1px solid rgba(56, 189, 248, 0.3);
+  transition: all 0.15s ease;
+}
+
+.markdown-body a:hover {
+  color: #7dd3fc;
+  border-color: var(--accent-cyan);
+}
+
+.markdown-body blockquote {
+  border-left: 3px solid #ffffff;
+  background: var(--bg-surface);
+  padding: 1rem 1.35rem;
+  margin: 1.75rem 0;
+  border-radius: 0 8px 8px 0;
+  color: #cbd5e1;
+  font-style: italic;
+}
+
+.markdown-body ul, .markdown-body ol {
+  margin: 1rem 0 1.5rem 1.5rem;
+}
+
+.markdown-body li {
+  margin-bottom: 0.5rem;
+  color: #cbd5e1;
+}
+
+.markdown-body hr {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 2.5rem 0;
+}
+
+.markdown-body code:not([class*="language-"]) {
+  background: #111726;
+  color: #f1f5f9;
+  padding: 0.2rem 0.45rem;
+  border-radius: 4px;
+  font-family: var(--font-mono);
+  font-size: 0.85em;
+  border: 1px solid #1e293b;
+}
+
+.code-container {
+  background: var(--bg-code);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  margin: 1.75rem 0;
+  overflow: hidden;
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.75);
+}
+
+.code-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 1rem;
+  background: #0b0f19;
+  border-bottom: 1px solid var(--border);
+}
+
+.code-lang {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.code-copy-btn {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  padding: 0.25rem 0.6rem;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  touch-action: manipulation;
+}
+
+.code-copy-btn:hover {
+  color: #ffffff;
+  border-color: var(--border-focus);
+}
+
+.markdown-body pre {
+  margin: 0;
+  padding: 1.25rem;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  line-height: 1.65;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  background: transparent;
+  color: #e2e8f0;
+}
+
+.markdown-body pre code {
+  font-family: inherit;
+  font-size: inherit;
+  background: transparent;
+  padding: 0;
+  border: none;
+}
+
+.table-wrap {
+  width: 100%;
+  overflow-x: auto;
+  margin: 1.75rem 0;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.markdown-body table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+}
+
+.markdown-body th {
+  background: #0b0f19;
+  color: #ffffff;
+  font-weight: 600;
+  text-align: left;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.markdown-body td {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  color: #cbd5e1;
+}
+
+.markdown-body tr:last-child td {
+  border-bottom: none;
+}
+
+.markdown-body tr:nth-child(even) td {
+  background: rgba(255, 255, 255, 0.015);
+}
+
+.tok-comment { color: #64748b; font-style: italic; }
+.tok-str { color: #4ade80; }
+.tok-builtin { color: #38bdf8; font-weight: 600; }
+.tok-num { color: #fb923c; }
+.tok-op { color: #94a3b8; }
+.tok-punct { color: #64748b; }
+.tok-kw { color: #ffffff; font-weight: 700; }
+.tok-type { color: #818cf8; font-weight: 600; }
+.tok-self { color: #c084fc; font-weight: 600; }
+.tok-bool { color: #f472b6; font-weight: 600; }
+.tok-fn { color: #facc15; }
+.tok-def { color: #e2e8f0; font-weight: 600; }
+.tok-ident { color: #cbd5e1; }
+.tok-flag { color: #38bdf8; }
+
+.chapter-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 4rem;
+  padding-top: 2rem;
+  border-top: 1px solid var(--border);
+  gap: 1rem;
+}
+
+.chapter-card {
+  display: flex;
+  flex-direction: column;
+  padding: 1rem 1.25rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  text-decoration: none;
+  min-width: 180px;
+  max-width: 260px;
+  transition: all 0.15s ease;
+}
+
+.chapter-card:hover {
+  border-color: var(--border-focus);
+  background: rgba(255, 255, 255, 0.03);
+  transform: translateY(-2px);
+}
+
+.chapter-card-label {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  letter-spacing: 0.08em;
+  margin-bottom: 0.35rem;
+}
+
+.chapter-card-title {
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.chapter-card.next {
+  margin-left: auto;
+  text-align: right;
+}
+
+.toc-panel {
+  width: var(--toc-w);
+  flex-shrink: 0;
+  position: fixed;
+  top: var(--topbar-h);
+  bottom: 0;
+  right: 0;
+  overflow-y: auto;
+  padding: 2.5rem 1.5rem;
+  border-left: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.toc-header {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-bottom: 0.85rem;
+}
+
+.toc-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.toc-item a {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--text-dim);
+  text-decoration: none;
+  line-height: 1.4;
+  transition: color 0.15s ease;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.toc-item a:hover {
+  color: #ffffff;
+}
+
+.toc-item.active a {
+  color: var(--accent-cyan);
+  font-weight: 600;
+}
+
+.toc-item.sub {
+  padding-left: 0.75rem;
+  font-size: 0.75rem;
+}
+
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 45;
+}
+
+@media (max-width: 1240px) {
+  .toc-panel {
+    display: none;
+  }
+  .main-content {
+    margin-right: 0;
+  }
+}
+
+@media (max-width: 860px) {
+  .sidebar {
+    transform: translateX(-100%);
+  }
+  .sidebar.open {
+    transform: translateX(0);
+  }
+  .sidebar-overlay.open {
+    display: block;
+  }
+  .main-content {
+    margin-left: 0;
+    padding: 2rem 1.5rem 5rem 1.5rem;
+  }
+  .menu-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .breadcrumb {
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .topbar {
+    padding: 0 1rem;
+  }
+  .main-content {
+    padding: 1.5rem 1rem 4rem 1rem;
+  }
+  .chapter-nav {
+    flex-direction: column;
+  }
+  .chapter-card {
+    max-width: 100%;
+    width: 100%;
+  }
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-left">
+    <button class="menu-toggle" id="menu-toggle" aria-label="Toggle Menu">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+    </button>
+    <a href="/abyss" class="brand-link">
+      <svg class="brand-logo" viewBox="0 0 1254 1254" fill="currentColor">
+        <polygon points="564.2,313.5 692.1,313.5 975.0,939.5 854.0,939.5 627.9,436.3 392.2,939.5 270.6,939.5"/>
+        <circle cx="626.3" cy="705.1" r="67.5"/>
+      </svg>
+      <span class="brand-title">ABYSS</span>
+      <span class="brand-badge">DOCS</span>
+    </a>
+    <div class="breadcrumb">
+      <span class="breadcrumb-sep">/</span>
+      <span class="breadcrumb-active" id="breadcrumb-title">Introduction</span>
+    </div>
+  </div>
+
+  <div class="topbar-right">
+    <a href="/abyss" class="topbar-btn">
+      <span>Landing</span>
+    </a>
+    <a href="https://github.com/jhosein58/abyss" target="_blank" rel="noopener noreferrer" class="topbar-btn">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+      <span>GitHub</span>
+    </a>
+  </div>
+</header>
+
+<div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <div class="search-box">
+      <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+      <input type="text" class="search-input" id="search-input" placeholder="Search chapters..." />
+    </div>
+    <div id="nav-container"></div>
+  </aside>
+
+  <main class="main-content">
+    <article class="content-article">
+      <div id="content-loading" class="doc-loader">
+        <div class="doc-spinner"></div>
+        <span>Retrieving document...</span>
+      </div>
+      <div id="markdown-container" class="markdown-body"></div>
+      <nav class="chapter-nav" id="chapter-nav"></nav>
+    </article>
+  </main>
+
+  <aside class="toc-panel" id="toc-panel">
+    <div class="toc-header">On This Page</div>
+    <ul class="toc-list" id="toc-list"></ul>
+  </aside>
+</div>
+
+<script>
+const EMBEDDED_DOCS = {"README.md": "# <img src=\"assets/logo.svg\" alt=\"A\" height=\"28\" />byss\n\n**Built for the deep.**\n\nA statically typed, data-oriented systems programming language. Pairs modern ergonomics with the transparency and speed of C.\n\n- **100% Self-Hosted:** Bit-for-bit deterministic bootstrap verification.\n- **Pure C99 Target:** Emits standard portable C. Compiles with GCC, Clang, or MSVC.\n- **Integrated Bytecode VM:** Instant compile-and-run without external toolchain latency.\n- **Compile-Time Evaluation:** Run arbitrary logic at compile time via `cmpt`.\n- **First-Class Types:** Compute, return, and pass types dynamically at compile time.\n- **Zero-Dependency Bootstrap:** `dist/bootstrap.c` compiles anywhere with a single `cc` command.\n\n📖 **Guide:** [**Into the Abyss**](docs/README.md) — The official language documentation and book.\n\n---\n\n## Code at a Glance\n\n```abyss\nimport print from \"std/io\"\n\nPoint :: struct {\n    x, y i32\n\n    dist_sq :: fn(self &Self) i32 {\n        self.x * self.x + self.y * self.y\n    }\n}\n\nTypeByCond :: fn(cond bool) type {\n    if cond { i32 } else { f32 }\n}\n\nmain :: fn() {\n    p: Point = .{ x: 3, y: 4 }\n    print(\"Distance squared: \")\n    print(p.dist_sq())\n    print(\"\\n\")\n\n    val := cmpt {\n        base := 20\n        base * 2 + 2\n    }\n    print(\"Compile-time evaluated: \")\n    print(val)\n    print(\"\\n\")\n\n    x: TypeByCond(true) = 100\n    print(\"Computed type value: \")\n    print(x)\n    print(\"\\n\")\n}\n```\n\n---\n\n## Quick Start\n\n```sh\n# Build compiler (using seed binary)\n./abyss b\n\n# Or bootstrap from standalone C99 source\ngcc -std=c99 -O3 -rdynamic dist/bootstrap.c -o abyssc\n\n# Run immediately via VM\n./abyss r main.a\n\n# Compile native binary and run\n./abyss br main.a\n```\n\n---\n\n## Tooling\n\n| Command | Description |\n| :--- | :--- |\n| `./abyss r <file>` | Run on Bytecode VM (zero compile latency) |\n| `./abyss b <file>` | Compile to native binary (`-O3`) |\n| `./abyss br <file>` | Compile and run native binary |\n| `./abyss b-win <file>` | Cross-compile standalone Windows `.exe` |\n| `./abyss test` | Run test suite (C + VM backends) |\n| `./abyss test-win` | Run Windows test suite via Wine |\n| `./abyss release` | Package release binaries and `bootstrap.c` |\n\n---\n\n## License\n\n[MIT](LICENSE)\n", "docs/README.md": "# Into the Abyss\n\n*The Official Guide to the Abyss Programming Language*\n\nWelcome to **Into the Abyss**.\n\nThis book is designed for programmers who want to build fast, predictable software without fighting layers of unnecessary abstraction. Abyss was built for the deep—where memory has addresses, caches have line sizes, and code runs directly on the machine.\n\nThere are no hundred-page theoretical preambles here. Every chapter is short, code-first, and gets straight to the point.\n\n---\n\n## Table of Contents\n\n### Part I: Overview\nGet into the mindset behind the language and understand how the compiler works.\n- [Philosophy](01-overview/philosophy.md) — Mechanical sympathy, zero hidden runtime, and control.\n- [Architecture](01-overview/architecture.md) — The dual-engine design (VM + C99), data-oriented compiler, and bootstrapping.\n\n### Part II: Quick Start\nStart writing and running code in less than ten minutes.\n- [Whirlwind Tour](02-quickstart/whirlwind-tour.md) — Syntax, types, control flow, structs, and compile-time execution at a glance.\n- [Tooling & Workflow](02-quickstart/workflow.md) — Using the `./abyss` driver for instant VM runs and optimized native builds.\n\n### Part III: The Guide *(In Progress)*\nA deep, structured dive into every language feature.\n- `01 - Basics` — Primitive types, variables, arithmetic, and operators.\n- `02 - Control Flow` — Branching with `if/else`, looping with `while` and `for`, and pattern matching.\n- `03 - Functions & Methods` — Function declarations, clean return syntax, and method receivers.\n- `04 - Structs & Types` — Data layout, constructors, methods, and first-class types.\n- `05 - Pointers & Memory` — Addressing, dereferencing, manual memory control, and layout guarantees.\n- `06 - Comptime & The VM` — Running arbitrary code during compilation with `cmpt`.\n\n### Part IV: Reference *(In Progress)*\nComprehensive API documentation for the standard library.\n- `core` — The foundation: `String`, `Str`, and core intrinsics.\n- `std/io` — Formatted printing and basic I/O.\n- `std/fs` — File system operations and path manipulation.\n- `std/mem` — Allocators, manual heap management, and memory blocks.\n- `std/env` — Command-line argument parsing and environment variables.\n- `std/sys` — Platform bindings and system-level primitives.\n\n---\n\n> *\"Built for the deep.\"*\n", "docs/01-overview/philosophy.md": "# Philosophy\n\nAbyss is built on a simple premise: **you should understand what your machine is doing.**\n\nOver the last decade, mainstream languages have added layer upon layer of abstraction. Writing modern software sometimes feels like wearing three pairs of oven mitts just to pick up a coin: safe, perhaps, but clumsy and disconnected from reality.\n\nAbyss takes off the oven mitts. It pairs clean, modern syntax with the uncompromising transparency of C.\n\n---\n\n## 1. Mechanical Sympathy\n\nHardware is not an abstract mathematical canvas. It has L1/L2/L3 cache lines, branch predictors, registers, and memory buses. \n\nAbyss encourages data layout and code patterns that work *with* the hardware rather than fighting it. Linear memory arrays beat pointer-chasing linked lists every day of the week, and Abyss makes writing data-oriented code feel natural.\n\n## 2. No Garbage Collector\n\nA garbage collector is convenient—until it pauses your application to tidy up right in the middle of an audio buffer callback or a competitive game frame.\n\nAbyss has no garbage collector. You allocate memory when you need it, and you free it when you're done. Your latency remains completely deterministic from the first microsecond to the last.\n\n## 3. No Hidden Costs\n\nWhat you see in your source code is what actually executes on the processor:\n\n- **No hidden copy constructors** copying megabytes of memory behind your back.\n- **No implicit allocations** secretly calling `malloc` when you concatenate two values.\n- **No mysterious runtime daemons** managing threads or checking stacks.\n\nIf an operation takes memory or time, it is visible in the code.\n\n## 4. Modern Ergonomics, Low-Level Soul\n\nLow-level does not have to mean archaic. Abyss draws ergonomic inspiration from modern languages like Odin and Jai:\n\n- Clean type inference (`:=`).\n- First-class types that can be passed to and returned from functions.\n- Expressive compile-time evaluation (`cmpt`) powered by an integrated bytecode VM.\n- Functions without pointless boilerplate: if a function doesn't return anything, you don't need to specify a return type.\n\n## 5. Portability Through C99\n\nRather than dragging a multi-gigabyte compiler backend infrastructure into every installation, the Abyss compiler emits standard, portable ISO C99. \n\nAny platform with a working C compiler—whether it's a Linux server, a Windows desktop, an embedded ARM board, or a retro machine—can compile and run Abyss code at maximum optimization.\n\n---\n\n[Next: Architecture &rarr;](architecture.md)\n", "docs/01-overview/architecture.md": "# Architecture\n\nUnder the hood, Abyss is designed as a fast, deterministic pipeline with zero bloat. It rejects the modern trend of multi-gigabyte compiler toolchains that turn every build into an excuse to go grab coffee.\n\n---\n\n## The Dual-Engine Model\n\nTraditional compilers force a painful compromise: either you use a sluggish interpreter with instant startup, or an optimizing native compiler where you wait seconds (or minutes) for intermediate representations to optimize.\n\nAbyss includes **two coordinated execution engines** in a single binary:\n\n```\n                  ┌──────────────────────┐\n                  │  Abyss Source (.a)   │\n                  └──────────┬───────────┘\n                             │\n                  ┌──────────▼───────────┐\n                  │     DOP Compiler     │\n                  │ (Lex, Parse, Types)  │\n                  └──────────┬───────────┘\n                             │\n             ┌───────────────┴───────────────┐\n             │                               │\n    ┌────────▼────────┐             ┌────────▼────────┐\n    │   Bytecode VM   │             │   C99 Emitter   │\n    ├─────────────────┤             ├─────────────────┤\n    │ • Zero latency  │             │ • Portable C99  │\n    │ • Tests & dev   │             │ • Maximum -O3   │\n    │ • 'cmpt' blocks │             │ • GCC / Clang   │\n    └─────────────────┘             └─────────────────┘\n```\n\n1. **The Bytecode VM:**\n   The compiler can translate source directly into compact bytecode instructions and execute them instantly in-memory. This powers:\n   - Zero-latency test runs (`./abyss r main.a`).\n   - Compile-time evaluation (`cmpt { ... }`).\n   - Interactive developer workflows.\n\n2. **The C99 Emitter:**\n   When you need maximum throughput, Abyss emits pure ISO C99. This output contains no compiler-specific extensions (no GNU statement expressions or nested labels) and compiles cleanly with GCC, Clang, or MSVC. You get industry-standard native code optimization without carrying the weight of a heavy backend inside the language itself.\n\n---\n\n## Data-Oriented Compiler Core (DOP)\n\nMost classic compilers represent code as deeply nested, pointer-heavy Abstract Syntax Trees (ASTs). When traversing an AST, the CPU constantly stalls on cache misses, jumping randomly across the heap.\n\nThe Abyss compiler is architected around **Data-Oriented Programming (DOP)**:\n- Code nodes, types, and symbols are stored in **dense, linear tables**.\n- References are compact 32-bit integer IDs (`HirId`, `TyId`, `SymbolId`) rather than 64-bit heap pointers.\n- Traversal sweeps sequentially across contiguous memory, keeping CPU caches warm and parsing blazing fast.\n\n---\n\n## Self-Hosting & Fixed-Point Determinism\n\nAbyss is **100% self-hosted**. The compiler compiles itself:\n\n$$\\text{abyssc}_{G_1}(\\text{main.a}) \\rightarrow \\text{stage2.c} \\rightarrow \\text{abyssc}_{G_2}$$\n$$\\text{abyssc}_{G_2}(\\text{main.a}) \\rightarrow \\text{stage3.c} \\rightarrow \\text{abyssc}_{G_3}$$\n\nThe output of Generation 2 and Generation 3 is mathematically verified to be **bit-for-bit identical** ($G_2 \\equiv G_3$). There is no undefined behavior, no memory corruption, and no environmental noise leaking into the build.\n\n---\n\n## Zero-Dependency Bootstrap\n\nHow do you build a self-hosted compiler on a machine that doesn't have the compiler yet?\n\nAbyss solves the \"chicken-and-egg\" bootstrap problem cleanly. Every release packages `dist/bootstrap.c`—a single, standalone C99 source file containing the entire compiler.\n\nOn any machine with a basic C compiler:\n```sh\ncc -std=c99 -O3 -rdynamic dist/bootstrap.c -o abyssc\n```\n\nDone. No package managers, no downloading toolchains, no external libraries.\n\n---\n\n[Next: Whirlwind Tour &rarr;](../02-quickstart/whirlwind-tour.md)\n", "docs/02-quickstart/whirlwind-tour.md": "# Whirlwind Tour\n\nThis tour will get you comfortable with Abyss syntax in less than ten minutes.\n\n---\n\n## 1. Hello, World!\n\nEvery Abyss program starts at `main`:\n\n```abyss\nimport print from \"std/io\"\n\nmain :: fn() {\n    print(\"Hello from the deep!\\n\")\n}\n```\n\nNotice anything missing? There is no `void` or `unit` keyword. If a function doesn't return anything, you simply don't write a return type. \n\n---\n\n## 2. Variables & Comments\n\nComments start with `--`. Use `:=` for type inference, or specify types explicitly:\n\n```abyss\n-- This is a single-line comment\nx := 42                -- Inferred integer\npi: f32 = 3.14159      -- Explicit 32-bit float\nname := \"Abyss\"        -- Inferred string\nactive := true         -- Boolean\n\n-- Variables can be updated with '='\nx = x + 10\n```\n\n---\n\n## 3. Control Flow\n\n### `if` / `else`\nParentheses around conditions are optional, but braces around blocks are required:\n\n```abyss\ndepth := 500\n\nif depth > 1000 {\n    print(\"Crushing pressure!\\n\")\n} else if depth > 200 {\n    print(\"The twilight zone.\\n\")\n} else {\n    print(\"Near the surface.\\n\")\n}\n```\n\n### `while`\nStraightforward loops without surprises:\n\n```abyss\ni := 0\nwhile i < 5 {\n    print(i)\n    print(\" \")\n    i = i + 1\n}\n-- Outputs: 0 1 2 3 4\n```\n\n---\n\n## 4. Functions & Methods\n\nFunctions are declared with `:: fn(...) [ReturnType]`:\n\n```abyss\nadd :: fn(a i32, b i32) i32 {\n    a + b\n}\n\nlog_depth :: fn(meters i32) {\n    print(\"Current depth: \")\n    print(meters)\n    print(\"m\\n\")\n}\n```\n\nThe last expression in a block automatically acts as the return value—no explicit `return` keyword needed for simple expressions (though `ret` is available when you want an early exit).\n\n---\n\n## 5. Structs & Data Layout\n\nStructs define custom data types. Field definitions use `name Type` syntax (no colons between name and type):\n\n```abyss\nPoint :: struct {\n    x, y i32\n\n    -- Methods take 'self &Self' to access instance data\n    dist_sq :: fn(self &Self) i32 {\n        self.x * self.x + self.y * self.y\n    }\n}\n```\n\nInstantiating a struct is clean and expressive with struct literal syntax (`.{ ... }`):\n\n```abyss\np: Point = .{ x: 3, y: 4 }\nprint(p.dist_sq()) -- Prints: 25\n```\n\n---\n\n## 6. Compile-Time Execution (`cmpt`)\n\nWhy calculate something at runtime when your CPU can do it once during compilation? \n\nThe `cmpt` block executes arbitrary code at compile time using the internal bytecode VM:\n\n```abyss\nTABLE_SIZE := cmpt {\n    base := 64\n    factor := 4\n    base * factor + 12\n}\n\n-- TABLE_SIZE is baked into the binary as an exact constant (268)\n```\n\n---\n\n## 7. First-Class Types\n\nIn Abyss, types are first-class values. You can pass them as arguments, return them from functions, and choose them conditionally:\n\n```abyss\nPrecisionType :: fn(high_precision bool) type {\n    if high_precision { f64 } else { f32 }\n}\n\n-- Computes the type at compile-time without complex template metaprogramming\ncoordinate: PrecisionType(true) = 142.857\n```\n\nNo template error messages stretching across five terminal screens. Types are just code.\n\n---\n\n[Next: Tooling & Workflow &rarr;](workflow.md)\n", "docs/02-quickstart/workflow.md": "# Tooling & Workflow\n\nAbyss comes with a developer driver script in the repository root: `./abyss`. It handles everything from zero-latency script-like execution to native cross-compilation.\n\n---\n\n## The Fast Loop: Run with the VM\n\nDuring active development, waiting for a C compiler to link binaries adds unnecessary friction. Use the Bytecode VM for instantaneous turnaround:\n\n```sh\n./abyss r main.a\n```\n\nThe compiler parses your code, checks types, translates it to bytecode, and executes it immediately in memory. Zero disk clutter, zero linker latency.\n\n---\n\n## The Native Loop: Optimized C99 Binaries\n\nWhen you need peak execution performance:\n\n```sh\n# Compile to an optimized native binary (-O3)\n./abyss b main.a\n\n# Or compile and run in a single command\n./abyss br main.a\n```\n\nThis passes the emitted C99 code to your native C compiler (`gcc` or `clang`) with maximum optimization flags enabled.\n\n---\n\n## Windows Cross-Compilation\n\nWriting code on Linux and deploying to Windows? Abyss supports one-command standalone Windows cross-compilation via MinGW:\n\n```sh\n./abyss b-win main.a\n```\n\nThe resulting `.exe` binary is completely standalone—it links directly to standard Windows system libraries (`KERNEL32.dll` and `msvcrt.dll`) with zero third-party dependencies or runtime bloat.\n\n---\n\n## Testing & Quality Assurance\n\nAbyss has an automated test suite verifying both execution backends:\n\n```sh\n# Run all tests against both the C99 and VM backends\n./abyss test\n\n# Or run tests on Windows binaries using Wine\n./abyss test-win\n```\n\nEvery language feature is cross-tested to guarantee that VM execution and native C execution produce identical output.\n\n---\n\n## Release Packaging & Bootstrap Verification\n\nTo verify self-hosting determinism and generate standalone release packages:\n\n```sh\n# Run multi-round fixed-point bootstrap verification\n./abyss bootstrap\n\n# Generate distribution artifacts into dist/\n./abyss release\n```\n\nThis verifies bit-for-bit generational equality ($G_2 \\equiv G_3$) and updates `dist/bootstrap.c` for distribution.\n\n---\n\n[Next Part: The Guide &rarr;](../03-the-guide/01-basics.md)\n"};
+
+const docsNav = [
+  {
+    group: 'Overview',
+    items: [
+      { id: 'docs/README.md', title: 'Into the Abyss', desc: 'Official Guide & Book' },
+      { id: 'README.md', title: 'Repository Overview', desc: 'Compiler & Tooling' },
+      { id: 'docs/01-overview/philosophy.md', title: 'Philosophy', desc: 'Mechanical sympathy & control' },
+      { id: 'docs/01-overview/architecture.md', title: 'Architecture', desc: 'Dual-engine & self-hosting' }
+    ]
+  },
+  {
+    group: 'Quick Start',
+    items: [
+      { id: 'docs/02-quickstart/whirlwind-tour.md', title: 'Whirlwind Tour', desc: 'Syntax, types & memory' },
+      { id: 'docs/02-quickstart/workflow.md', title: 'Tooling & Workflow', desc: './abyss driver script' }
+    ]
+  },
+  {
+    group: 'The Guide',
+    badge: 'In Progress',
+    items: [
+      { id: '03-the-guide/01-basics.md', title: '01 - Basics', disabled: true },
+      { id: '03-the-guide/02-control-flow.md', title: '02 - Control Flow', disabled: true },
+      { id: '03-the-guide/03-functions.md', title: '03 - Functions & Methods', disabled: true },
+      { id: '03-the-guide/04-structs.md', title: '04 - Structs & Types', disabled: true },
+      { id: '03-the-guide/05-pointers.md', title: '05 - Pointers & Memory', disabled: true },
+      { id: '03-the-guide/06-comptime.md', title: '06 - Comptime & VM', disabled: true }
+    ]
+  },
+  {
+    group: 'Standard Library',
+    badge: 'In Progress',
+    items: [
+      { id: '04-reference/core.md', title: 'core', disabled: true },
+      { id: '04-reference/std-io.md', title: 'std/io', disabled: true },
+      { id: '04-reference/std-fs.md', title: 'std/fs', disabled: true },
+      { id: '04-reference/std-mem.md', title: 'std/mem', disabled: true },
+      { id: '04-reference/std-env.md', title: 'std/env', disabled: true },
+      { id: '04-reference/std-sys.md', title: 'std/sys', disabled: true }
+    ]
+  }
+];
+
+const linearNav = [
+  { id: 'docs/README.md', title: 'Into the Abyss' },
+  { id: 'README.md', title: 'Repository Overview' },
+  { id: 'docs/01-overview/philosophy.md', title: 'Philosophy' },
+  { id: 'docs/01-overview/architecture.md', title: 'Architecture' },
+  { id: 'docs/02-quickstart/whirlwind-tour.md', title: 'Whirlwind Tour' },
+  { id: 'docs/02-quickstart/workflow.md', title: 'Tooling & Workflow' }
+];
+
+const GITHUB_RAW_BASE = 'https://raw.githubusercontent.com/jhosein58/abyss/main/';
+const docCache = new Map();
+let currentDocId = '';
+
+function escapeHtml(str) {
+  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+function highlightAbyss(code) {
+  const tokenRegex = /(--[^
+]*)|(c"(?:\.|[^"\])*"|"(?:\.|[^"\])*"|'(?:\.|[^'\])*')|(@[a-zA-Z_][a-zA-Z0-9_]*)|(0[xX][0-9a-fA-F_]+|[0-9_]+\.[0-9_]+(?:[eE][+-]?[0-9_]+)?|[0-9_]+)|(::|:=|\+=|-=|\*=|(?:\/)=|%=|&=|\|=|\^=|<<=|>>=|==|!=|<=|>=|<<|>>|->|\.\.|\.|[+\-*\/%=&|^~<>!])|([;,:#\(\)\[\]\{\}])|([a-zA-Z_][a-zA-Z0-9_]*)|(\s+)|(.)/g;
+  const keywords = new Set(['if','else','match','for','in','while','break','cont','ret','cmpt','fn','struct','enum','import','from','as','and','or','not']);
+  const types = new Set(['u8','u16','u32','u64','u128','usize','i8','i16','i32','i64','i128','isize','f32','f64','bool','type','Self']);
+  const booleans = new Set(['true','false']);
+  let out = '';
+  let m;
+  while ((m = tokenRegex.exec(code)) !== null) {
+    const [full, comment, str, builtin, num, op, punct, word, ws, other] = m;
+    if (comment) out += '<span class="tok-comment">' + escapeHtml(comment) + '</span>';
+    else if (str) out += '<span class="tok-str">' + escapeHtml(str) + '</span>';
+    else if (builtin) out += '<span class="tok-builtin">' + escapeHtml(builtin) + '</span>';
+    else if (num) out += '<span class="tok-num">' + escapeHtml(num) + '</span>';
+    else if (op) out += '<span class="tok-op">' + escapeHtml(op) + '</span>';
+    else if (punct) out += '<span class="tok-punct">' + escapeHtml(punct) + '</span>';
+    else if (word) {
+      if (keywords.has(word)) out += '<span class="tok-kw">' + escapeHtml(word) + '</span>';
+      else if (types.has(word) || /^[A-Z]/.test(word)) out += '<span class="tok-type">' + escapeHtml(word) + '</span>';
+      else if (word === 'self') out += '<span class="tok-self">' + escapeHtml(word) + '</span>';
+      else if (booleans.has(word)) out += '<span class="tok-bool">' + escapeHtml(word) + '</span>';
+      else {
+        const rest = code.slice(tokenRegex.lastIndex).trimStart();
+        if (rest.startsWith('(')) out += '<span class="tok-fn">' + escapeHtml(word) + '</span>';
+        else if (rest.startsWith('::')) out += '<span class="tok-def">' + escapeHtml(word) + '</span>';
+        else out += '<span class="tok-ident">' + escapeHtml(word) + '</span>';
+      }
+    } else if (ws) out += ws;
+    else if (other) out += escapeHtml(other);
+  }
+  return out;
+}
+
+function highlightShell(code) {
+  const tokenRegex = /(#[^
+]*)|("(?:\.|[^"\])*"|'(?:\.|[^'\])*')|(-[a-zA-Z0-9_\-]+)|((?:gcc|clang|cc|make|git|curl|echo|cat|cd|ls|mkdir|rm)|\.\/abyss)|(\s+)|(.)/g;
+  let out = '';
+  let m;
+  while ((m = tokenRegex.exec(code)) !== null) {
+    const [full, comment, str, flag, cmd, ws, other] = m;
+    if (comment) out += '<span class="tok-comment">' + escapeHtml(comment) + '</span>';
+    else if (str) out += '<span class="tok-str">' + escapeHtml(str) + '</span>';
+    else if (flag) out += '<span class="tok-flag">' + escapeHtml(flag) + '</span>';
+    else if (cmd) out += '<span class="tok-fn">' + escapeHtml(cmd) + '</span>';
+    else if (ws) out += ws;
+    else if (other) out += escapeHtml(other);
+  }
+  return out;
+}
+
+function renderFallbackMarkdown(md) {
+  const lines = md.split('\n');
+  let html = '';
+  let inCode = false;
+  let codeLang = '';
+  let codeBuffer = [];
+  let inList = false;
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    if (line.trim().startsWith('```')) {
+      if (!inCode) {
+        if (inList) { html += '</ul>'; inList = false; }
+        inCode = true;
+        codeLang = line.trim().slice(3).trim();
+        codeBuffer = [];
+      } else {
+        inCode = false;
+        const rawCode = codeBuffer.join('\n');
+        let highlighted = '';
+        if (codeLang === 'abyss' || codeLang === 'a') highlighted = highlightAbyss(rawCode);
+        else if (codeLang === 'sh' || codeLang === 'bash' || codeLang === 'shell') highlighted = highlightShell(rawCode);
+        else highlighted = escapeHtml(rawCode);
+
+        html += '<div class="code-container"><div class="code-header"><span class="code-lang">' + (codeLang || 'text') + '</span><button class="code-copy-btn">Copy</button></div><pre><code>' + highlighted + '</code></pre></div>';
+      }
+      continue;
+    }
+
+    if (inCode) {
+      codeBuffer.push(line);
+      continue;
+    }
+
+    if (line.startsWith('# ')) {
+      if (inList) { html += '</ul>'; inList = false; }
+      html += '<h1>' + formatInline(line.slice(2)) + '</h1>';
+    } else if (line.startsWith('## ')) {
+      if (inList) { html += '</ul>'; inList = false; }
+      html += '<h2>' + formatInline(line.slice(3)) + '</h2>';
+    } else if (line.startsWith('### ')) {
+      if (inList) { html += '</ul>'; inList = false; }
+      html += '<h3>' + formatInline(line.slice(4)) + '</h3>';
+    } else if (line.startsWith('---')) {
+      if (inList) { html += '</ul>'; inList = false; }
+      html += '<hr />';
+    } else if (line.startsWith('> ')) {
+      if (inList) { html += '</ul>'; inList = false; }
+      html += '<blockquote>' + formatInline(line.slice(2)) + '</blockquote>';
+    } else if (line.startsWith('- ') || line.startsWith('* ')) {
+      if (!inList) { html += '<ul>'; inList = true; }
+      html += '<li>' + formatInline(line.slice(2)) + '</li>';
+    } else if (line.trim() === '') {
+      if (inList) { html += '</ul>'; inList = false; }
+    } else {
+      if (inList) { html += '</ul>'; inList = false; }
+      html += '<p>' + formatInline(line) + '</p>';
+    }
+  }
+  if (inList) html += '</ul>';
+  return html;
+}
+
+function formatInline(str) {
+  return escapeHtml(str)
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g, '<em>$1</em>')
+    .replace(/`([^`]+)`/g, '<code>$1</code>')
+    .replace(/\[([^\]]+)\]\(([^\)]+)\)/g, '<a href="$2">$1</a>');
+}
+
+function postProcessHtml(container) {
+  container.querySelectorAll('pre').forEach(pre => {
+    if (pre.closest('.code-container')) return;
+    const code = pre.querySelector('code');
+    const raw = code ? code.innerText : pre.innerText;
+    let lang = 'text';
+    if (code) {
+      const cls = code.className || '';
+      const match = cls.match(/language-([a-zA-Z0-9_\-]+)/);
+      if (match) lang = match[1];
+    }
+    let highlighted = '';
+    if (lang === 'abyss' || lang === 'a') highlighted = highlightAbyss(raw);
+    else if (lang === 'sh' || lang === 'bash' || lang === 'shell') highlighted = highlightShell(raw);
+    else highlighted = escapeHtml(raw);
+
+    const wrap = document.createElement('div');
+    wrap.className = 'code-container';
+    wrap.innerHTML = '<div class="code-header"><span class="code-lang">' + lang + '</span><button class="code-copy-btn">Copy</button></div><pre><code>' + highlighted + '</code></pre>';
+    pre.replaceWith(wrap);
+  });
+
+  container.querySelectorAll('table').forEach(table => {
+    if (table.parentElement && table.parentElement.classList.contains('table-wrap')) return;
+    const wrap = document.createElement('div');
+    wrap.className = 'table-wrap';
+    table.parentNode.insertBefore(wrap, table);
+    wrap.appendChild(table);
+  });
+
+  container.querySelectorAll('img').forEach(img => {
+    const src = img.getAttribute('src') || '';
+    if (src.startsWith('assets/')) {
+      img.src = GITHUB_RAW_BASE + src;
+    }
+  });
+
+  container.querySelectorAll('.code-copy-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const code = btn.closest('.code-container').querySelector('code');
+      if (!code) return;
+      navigator.clipboard.writeText(code.innerText.trim()).then(() => {
+        const prev = btn.textContent;
+        btn.textContent = 'Copied!';
+        setTimeout(() => { btn.textContent = prev; }, 1600);
+      });
+    });
+  });
+
+  container.querySelectorAll('a').forEach(a => {
+    const href = a.getAttribute('href') || '';
+    if (href.startsWith('http://') || href.startsWith('https://')) {
+      a.target = '_blank';
+      a.rel = 'noopener noreferrer';
+    } else if (href.endsWith('.md') || href.includes('.md#')) {
+      a.addEventListener('click', (e) => {
+        e.preventDefault();
+        const target = resolveDocPath(currentDocId, href);
+        navigateTo(target);
+      });
+    }
+  });
+}
+
+function resolveDocPath(fromDoc, linkHref) {
+  const [filePart, hashPart] = linkHref.split('#');
+  let currentDir = fromDoc.includes('/') ? fromDoc.slice(0, fromDoc.lastIndexOf('/')) : '';
+  let parts = (currentDir ? currentDir.split('/') : []).concat(filePart.split('/'));
+  let resolved = [];
+  for (const p of parts) {
+    if (!p || p === '.') continue;
+    if (p === '..') {
+      if (resolved.length > 0) resolved.pop();
+    } else {
+      resolved.push(p);
+    }
+  }
+  let finalPath = resolved.join('/');
+  if (finalPath.startsWith('abyss/docs/')) finalPath = finalPath.slice(6);
+  return finalPath;
+}
+
+function slugify(text) {
+  return text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+}
+
+function buildToc() {
+  const container = document.getElementById('markdown-container');
+  const tocList = document.getElementById('toc-list');
+  tocList.innerHTML = '';
+  const headings = container.querySelectorAll('h2, h3');
+  if (headings.length === 0) {
+    document.getElementById('toc-panel').style.display = 'none';
+    return;
+  }
+  document.getElementById('toc-panel').style.display = '';
+
+  headings.forEach(h => {
+    const text = h.textContent.trim();
+    const id = slugify(text);
+    h.id = id;
+    const li = document.createElement('li');
+    li.className = 'toc-item' + (h.tagName === 'H3' ? ' sub' : '');
+    li.innerHTML = '<a href="#' + id + '">' + escapeHtml(text) + '</a>';
+    li.querySelector('a').addEventListener('click', (e) => {
+      e.preventDefault();
+      h.scrollIntoView({ behavior: 'smooth' });
+    });
+    tocList.appendChild(li);
+  });
+}
+
+function renderSidebar() {
+  const navContainer = document.getElementById('nav-container');
+  navContainer.innerHTML = '';
+
+  docsNav.forEach(grp => {
+    const groupEl = document.createElement('div');
+    groupEl.className = 'nav-group';
+    groupEl.innerHTML = '<div class="nav-group-header"><span>' + escapeHtml(grp.group) + '</span>' + (grp.badge ? '<span class="nav-group-badge">' + escapeHtml(grp.badge) + '</span>' : '') + '</div>';
+    
+    const ul = document.createElement('ul');
+    ul.className = 'nav-items';
+    grp.items.forEach(it => {
+      const li = document.createElement('li');
+      const a = document.createElement('a');
+      a.className = 'nav-link' + (it.disabled ? ' disabled' : '') + (it.id === currentDocId ? ' active' : '');
+      a.href = it.disabled ? '#' : '#/' + it.id;
+      a.innerHTML = '<span>' + escapeHtml(it.title) + '</span>';
+      if (!it.disabled) {
+        a.addEventListener('click', (e) => {
+          e.preventDefault();
+          navigateTo(it.id);
+          closeMobileSidebar();
+        });
+      }
+      li.appendChild(a);
+      ul.appendChild(li);
+    });
+    groupEl.appendChild(ul);
+    navContainer.appendChild(groupEl);
+  });
+}
+
+function updateChapterNav(docId) {
+  const navEl = document.getElementById('chapter-nav');
+  navEl.innerHTML = '';
+  const idx = linearNav.findIndex(x => x.id === docId);
+  if (idx === -1) return;
+
+  if (idx > 0) {
+    const prev = linearNav[idx - 1];
+    const prevCard = document.createElement('a');
+    prevCard.className = 'chapter-card prev';
+    prevCard.href = '#/' + prev.id;
+    prevCard.innerHTML = '<span class="chapter-card-label">&larr; Previous</span><span class="chapter-card-title">' + escapeHtml(prev.title) + '</span>';
+    prevCard.addEventListener('click', (e) => {
+      e.preventDefault();
+      navigateTo(prev.id);
+    });
+    navEl.appendChild(prevCard);
+  }
+
+  if (idx < linearNav.length - 1) {
+    const next = linearNav[idx + 1];
+    const nextCard = document.createElement('a');
+    nextCard.className = 'chapter-card next';
+    nextCard.href = '#/' + next.id;
+    nextCard.innerHTML = '<span class="chapter-card-label">Next &rarr;</span><span class="chapter-card-title">' + escapeHtml(next.title) + '</span>';
+    nextCard.addEventListener('click', (e) => {
+      e.preventDefault();
+      navigateTo(next.id);
+    });
+    navEl.appendChild(nextCard);
+  }
+}
+
+async function loadMarkdown(docId) {
+  if (docCache.has(docId)) {
+    return docCache.get(docId);
+  }
+
+  try {
+    const res = await fetch(GITHUB_RAW_BASE + docId);
+    if (res.ok) {
+      const text = await res.text();
+      docCache.set(docId, text);
+      return text;
+    }
+  } catch (err) {}
+
+  if (EMBEDDED_DOCS[docId]) {
+    return EMBEDDED_DOCS[docId];
+  }
+  const stripped = docId.startsWith('docs/') ? docId.slice(5) : docId;
+  if (EMBEDDED_DOCS[stripped]) {
+    return EMBEDDED_DOCS[stripped];
+  }
+  return '# Document Not Found\n\nThe requested file `' + docId + '` could not be retrieved.';
+}
+
+async function navigateTo(docId) {
+  if (!docId) docId = 'docs/README.md';
+  currentDocId = docId;
+  window.location.hash = '#/' + docId;
+
+  const item = linearNav.find(x => x.id === docId);
+  document.getElementById('breadcrumb-title').textContent = item ? item.title : docId;
+  renderSidebar();
+
+  const loading = document.getElementById('content-loading');
+  const container = document.getElementById('markdown-container');
+  loading.style.display = 'flex';
+  container.style.display = 'none';
+
+  const rawMd = await loadMarkdown(docId);
+  loading.style.display = 'none';
+  container.style.display = 'block';
+
+  if (window.marked && typeof window.marked.parse === 'function') {
+    container.innerHTML = window.marked.parse(rawMd);
+  } else {
+    container.innerHTML = renderFallbackMarkdown(rawMd);
+  }
+
+  postProcessHtml(container);
+  buildToc();
+  updateChapterNav(docId);
+  window.scrollTo({ top: 0, behavior: 'instant' });
+}
+
+function closeMobileSidebar() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebar-overlay').classList.remove('open');
+}
+
+document.getElementById('menu-toggle').addEventListener('click', () => {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sidebar-overlay').classList.toggle('open');
+});
+
+document.getElementById('sidebar-overlay').addEventListener('click', closeMobileSidebar);
+
+document.getElementById('search-input').addEventListener('input', (e) => {
+  const query = e.target.value.toLowerCase().trim();
+  document.querySelectorAll('.nav-group').forEach(grp => {
+    let groupHasMatch = false;
+    grp.querySelectorAll('.nav-link').forEach(link => {
+      const text = link.textContent.toLowerCase();
+      if (!query || text.includes(query)) {
+        link.style.display = 'flex';
+        groupHasMatch = true;
+      } else {
+        link.style.display = 'none';
+      }
+    });
+    grp.style.display = groupHasMatch ? 'block' : 'none';
+  });
+});
+
+window.addEventListener('hashchange', () => {
+  const hashDoc = window.location.hash.replace(/^#\/?/, '');
+  if (hashDoc && hashDoc !== currentDocId) {
+    navigateTo(hashDoc);
+  }
+});
+
+const initialDoc = window.location.hash.replace(/^#\/?/, '') || 'docs/README.md';
+navigateTo(initialDoc);
+</script>
+</body>
+</html>
