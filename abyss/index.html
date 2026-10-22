@@ -285,12 +285,12 @@ body {
   color: #dcdcdc;
 }
 
-.kw { color: #ffffff; font-weight: 600; }
-.ty { color: #c7d2fe; font-weight: 500; }
-.fn { color: #fde047; }
-.str { color: #86efac; }
-.num { color: #fdba74; }
-.op { color: #71717a; }
+.kw { color: #ffffff; font-weight: 700; }
+.ty { color: #d4d4d8; font-weight: 600; }
+.fn { color: #f4f4f5; }
+.str { color: #a1a1aa; }
+.num { color: #71717a; }
+.op { color: #52525b; }
 
 .scroll-prompt {
   margin-top: 3.5rem;
@@ -360,9 +360,22 @@ body {
   position: relative;
   padding: 0 1.5rem;
   box-sizing: border-box;
+  overflow: hidden;
+}
+
+.abyssal-currents-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1;
 }
 
 .revelation-center {
+  position: relative;
+  z-index: 2;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -370,6 +383,9 @@ body {
 }
 
 .abyss-main-title {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   font-size: clamp(4.5rem, 13vw, 9.5rem);
   font-weight: 900;
   letter-spacing: 0.18em;
@@ -377,6 +393,14 @@ body {
   color: #ffffff;
   margin-bottom: 0.5rem;
   text-indent: 0.18em;
+  user-select: none;
+  position: relative;
+}
+
+.abyss-char {
+  display: inline-block;
+  will-change: transform, opacity, filter;
+  color: #ffffff;
 }
 
 .abyss-sub-title {
@@ -384,9 +408,10 @@ body {
   font-size: clamp(0.85rem, 1.8vw, 1.15rem);
   letter-spacing: 0.35em;
   text-transform: uppercase;
-  color: #4a4a4a;
+  color: #71717a;
   margin-bottom: 2.75rem;
   text-indent: 0.35em;
+  will-change: transform, opacity, letter-spacing;
 }
 
 .revelation-actions {
@@ -396,6 +421,7 @@ body {
   gap: 1.25rem;
   font-family: var(--font-mono);
   font-size: 0.85rem;
+  will-change: transform, opacity;
 }
 
 .revelation-link {
@@ -845,11 +871,18 @@ body {
 </div>
 
 <section class="revelation" id="stage-revelation" data-depth="-Infinity" data-zone="THE ABYSS">
+  <canvas class="abyssal-currents-canvas" id="abyssal-canvas"></canvas>
   <div class="revelation-center">
-    <h1 class="abyss-main-title">ABYSS</h1>
-    <p class="abyss-sub-title">programming language</p>
+    <h1 class="abyss-main-title" id="abyss-title" aria-label="ABYSS">
+      <span class="abyss-char">A</span>
+      <span class="abyss-char">B</span>
+      <span class="abyss-char">Y</span>
+      <span class="abyss-char">S</span>
+      <span class="abyss-char">S</span>
+    </h1>
+    <p class="abyss-sub-title" id="abyss-subtitle">programming language</p>
 
-    <div class="revelation-actions">
+    <div class="revelation-actions" id="revelation-actions">
       <a href="/abyss/docs/" class="revelation-link">docs</a>
       <a href="https://github.com/jhosein58/abyss" target="_blank" rel="noopener noreferrer" class="revelation-link">github</a>
     </div>
@@ -942,7 +975,7 @@ function updateHUD() {
     depthDisplay.textContent = currentDepth.toLocaleString() + 'm';
     depthDisplay.classList.remove('infinite-mode', 'infinite-transition');
     zoneDisplay.textContent = getZoneName(currentDepth);
-    zoneDisplay.style.color = '#555555';
+    zoneDisplay.style.color = '#71717a';
     wasInfinite = false;
   } else {
     const voidRatio = sRevTop > sVoidTop ? Math.min(Math.max((scrollTop - sVoidTop) / (sRevTop - sVoidTop), 0), 1) : 1;
@@ -956,7 +989,7 @@ function updateHUD() {
     }
 
     zoneDisplay.textContent = 'THE ABYSS';
-    zoneDisplay.style.color = '#888888';
+    zoneDisplay.style.color = '#a1a1aa';
 
     if (voidRatio < 0.88) {
       wasInfinite = false;
@@ -983,11 +1016,165 @@ function updateHUD() {
   depthTracker.style.transform = 'translateY(' + trackerY + 'px)';
 }
 
+const canvas = document.getElementById('abyssal-canvas');
+const ctx = canvas ? canvas.getContext('2d') : null;
+let particles = [];
+let animWidth = 0;
+let animHeight = 0;
+
+function initCurrents() {
+  if (!canvas) return;
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const rect = canvas.parentElement.getBoundingClientRect();
+  animWidth = rect.width;
+  animHeight = rect.height;
+  canvas.width = Math.floor(animWidth * dpr);
+  canvas.height = Math.floor(animHeight * dpr);
+  if (ctx) {
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.scale(dpr, dpr);
+  }
+
+  particles = [];
+  const count = Math.min(Math.floor(animWidth * 0.08), 50);
+  for (let i = 0; i < count; i++) {
+    particles.push({
+      x: Math.random() * animWidth,
+      y: Math.random() * animHeight,
+      len: Math.random() * 90 + 35,
+      speed: Math.random() * 1.8 + 0.8,
+      w: Math.random() * 1.5 + 0.5,
+      alpha: Math.random() * 0.28 + 0.06,
+      amp: Math.random() * 22 + 8,
+      freq: Math.random() * 0.012 + 0.005,
+      phase: Math.random() * Math.PI * 2
+    });
+  }
+}
+
+let lastScrollY = window.scrollY || 0;
+let scrollVelocity = 0;
+
+function renderFrame() {
+  const scrollTop = window.scrollY || document.documentElement.scrollTop;
+  const deltaScroll = Math.abs(scrollTop - lastScrollY);
+  scrollVelocity = scrollVelocity * 0.88 + deltaScroll * 0.12;
+  lastScrollY = scrollTop;
+
+  const maxScroll = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
+  const sVoidTop = stageVoid ? stageVoid.offsetTop : 3000;
+
+  let p = 0;
+  if (scrollTop > sVoidTop) {
+    p = Math.min(Math.max((scrollTop - sVoidTop) / (maxScroll - sVoidTop), 0), 1);
+  }
+
+  const time = performance.now() * 0.001;
+
+  if (ctx && animWidth > 0 && animHeight > 0) {
+    const revRect = stageRev ? stageRev.getBoundingClientRect() : null;
+    if (revRect && revRect.bottom > 0 && revRect.top < window.innerHeight) {
+      ctx.clearRect(0, 0, animWidth, animHeight);
+
+      if (p > 0.2) {
+        const auraP = Math.min(Math.max((p - 0.2) / 0.8, 0), 1);
+        const auraAlpha = auraP * 0.13;
+        const cx = animWidth * 0.5;
+        const cy = animHeight * 0.5;
+        const grad = ctx.createRadialGradient(cx, cy, 10, cx, cy, Math.min(animWidth, animHeight) * 0.48);
+        grad.addColorStop(0, 'rgba(255, 255, 255, ' + auraAlpha.toFixed(3) + ')');
+        grad.addColorStop(0.4, 'rgba(255, 255, 255, ' + (auraAlpha * 0.35).toFixed(3) + ')');
+        grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, animWidth, animHeight);
+      }
+
+      const velFactor = 1 + Math.min(scrollVelocity * 0.08, 3.5);
+      for (let i = 0; i < particles.length; i++) {
+        const pt = particles[i];
+        pt.y -= pt.speed * velFactor;
+        if (pt.y < -pt.len) {
+          pt.y = animHeight + pt.len;
+          pt.x = Math.random() * animWidth;
+        }
+
+        const wave1 = Math.sin(pt.y * pt.freq + time * 1.6 + pt.phase) * pt.amp;
+        const wave2 = Math.sin((pt.y - pt.len) * pt.freq + time * 1.6 + pt.phase) * pt.amp;
+
+        ctx.beginPath();
+        ctx.moveTo(pt.x + wave1, pt.y);
+        ctx.lineTo(pt.x + wave2, pt.y - pt.len);
+        ctx.strokeStyle = 'rgba(255, 255, 255, ' + (pt.alpha * (0.35 + p * 0.65)).toFixed(3) + ')';
+        ctx.lineWidth = pt.w;
+        ctx.stroke();
+      }
+    }
+  }
+
+  const chars = document.querySelectorAll('.abyss-char');
+  const staggers = [0.12, 0.22, 0.04, 0.28, 0.18];
+
+  for (let i = 0; i < chars.length; i++) {
+    const charEl = chars[i];
+    const s = staggers[i % staggers.length];
+    const cp = Math.min(Math.max((p - s) / 0.72, 0), 1);
+    const ease = Math.pow(cp, 2.4);
+    const turb = 1 - ease;
+
+    const waveY = Math.sin(time * 2.4 + i * 1.7) * (turb * 26);
+    const waveX = Math.cos(time * 1.9 + i * 2.2) * (turb * 18);
+    const transY = turb * (85 + i * 12) + waveY;
+    const transX = waveX;
+    const scale = 0.72 + ease * 0.28 + Math.sin(time * 1.5 + i) * (turb * 0.05);
+    const rot = Math.sin(time * 1.7 + i * 1.4) * (turb * 4.5);
+    const blur = Math.max(0, turb * 25);
+    const opacity = p > 0.02 ? Math.min(Math.max(ease * 1.25, 0.06 * turb), 1) : 0;
+
+    const glowSpread = turb * 35 + (p >= 0.98 ? 16 : 8);
+    const glowAlpha = ease * 0.95 + turb * 0.25;
+
+    charEl.style.transform = 'translate3d(' + transX.toFixed(2) + 'px, ' + transY.toFixed(2) + 'px, 0) scale(' + scale.toFixed(3) + ') rotate(' + rot.toFixed(2) + 'deg)';
+    charEl.style.filter = blur > 0.1 ? 'blur(' + blur.toFixed(2) + 'px)' : 'none';
+    charEl.style.opacity = opacity.toFixed(3);
+    charEl.style.textShadow = '0 0 ' + glowSpread.toFixed(1) + 'px rgba(255, 255, 255, ' + glowAlpha.toFixed(2) + '), 0 0 ' + (glowSpread * 2.2).toFixed(1) + 'px rgba(255, 255, 255, ' + (glowAlpha * 0.45).toFixed(2) + ')';
+  }
+
+  const subtitle = document.getElementById('abyss-subtitle');
+  if (subtitle) {
+    const subP = Math.min(Math.max((p - 0.78) / 0.20, 0), 1);
+    subtitle.style.opacity = subP.toFixed(3);
+    subtitle.style.transform = 'translateY(' + ((1 - subP) * 16).toFixed(1) + 'px)';
+    subtitle.style.letterSpacing = (0.22 + subP * 0.13).toFixed(3) + 'em';
+  }
+
+  const actions = document.getElementById('revelation-actions');
+  if (actions) {
+    const actP = Math.min(Math.max((p - 0.84) / 0.15, 0), 1);
+    actions.style.opacity = actP.toFixed(3);
+    actions.style.transform = 'translateY(' + ((1 - actP) * 14).toFixed(1) + 'px)';
+  }
+
+  requestAnimationFrame(renderFrame);
+}
+
 window.addEventListener('scroll', updateHUD, { passive: true });
-window.addEventListener('resize', updateHUD);
-window.addEventListener('orientationchange', updateHUD);
-window.addEventListener('DOMContentLoaded', updateHUD);
-window.addEventListener('load', updateHUD);
+window.addEventListener('resize', () => {
+  updateHUD();
+  initCurrents();
+});
+window.addEventListener('orientationchange', () => {
+  updateHUD();
+  initCurrents();
+});
+window.addEventListener('DOMContentLoaded', () => {
+  updateHUD();
+  initCurrents();
+  requestAnimationFrame(renderFrame);
+});
+window.addEventListener('load', () => {
+  updateHUD();
+  initCurrents();
+});
 updateHUD();
 
 document.querySelectorAll('.code-copy').forEach(btn => {
