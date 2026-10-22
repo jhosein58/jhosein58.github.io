@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1254 1254'%3E%3Cpolygon points='564.2,313.5 692.1,313.5 975.0,939.5 854.0,939.5 627.9,436.3 392.2,939.5 270.6,939.5' fill='%23FDFCFD'/%3E%3Ccircle cx='626.3' cy='705.1' r='67.5' fill='%23FDFCFD'/%3E%3C/svg%3E" />
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1254 1254'%3E%3Cpolygon points='564.2,313.5 692.1,313.5 975.0,939.5 854.0,939.5 627.9,436.3 392.2,939.5 270.6,939.5' fill='%23FFFFFF'/%3E%3Ccircle cx='626.3' cy='705.1' r='67.5' fill='%23FFFFFF'/%3E%3C/svg%3E" />
 <style>
 :root {
   --bg-color: #000000;
@@ -36,7 +36,7 @@ html {
   -webkit-font-smoothing: antialiased;
   width: 100%;
   max-width: 100vw;
-  overflow-x: hidden;
+  overflow-x: clip;
 }
 
 body {
@@ -46,7 +46,15 @@ body {
   width: 100%;
   max-width: 100vw;
   position: relative;
-  overflow-x: hidden;
+  overflow-x: clip;
+}
+
+.svg-defs {
+  position: absolute;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+  overflow: hidden;
 }
 
 .depth-track-system {
@@ -286,11 +294,11 @@ body {
 }
 
 .kw { color: #ffffff; font-weight: 700; }
-.ty { color: #d4d4d8; font-weight: 600; }
-.fn { color: #f4f4f5; }
-.str { color: #a1a1aa; }
-.num { color: #71717a; }
-.op { color: #52525b; }
+.ty { color: #d4d4d4; font-weight: 600; }
+.fn { color: #f2f2f2; }
+.str { color: #a3a3a3; }
+.num { color: #737373; }
+.op { color: #525252; }
 
 .scroll-prompt {
   margin-top: 3.5rem;
@@ -331,7 +339,7 @@ body {
 }
 
 .the-void {
-  min-height: 220vh;
+  min-height: 110vh;
   position: relative;
   display: flex;
   align-items: center;
@@ -346,31 +354,27 @@ body {
   animation: pulse-down 2.2s infinite ease-in-out;
 }
 
+.revelation-track {
+  height: 220vh;
+  position: relative;
+  background: #000000;
+}
+
 .revelation {
+  position: sticky;
+  top: 0;
   height: 100vh;
   height: 100dvh;
-  min-height: 100vh;
-  min-height: 100dvh;
+  width: 100%;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
   text-align: center;
   background: #000000;
-  position: relative;
   padding: 0 1.5rem;
   box-sizing: border-box;
   overflow: hidden;
-}
-
-.abyssal-currents-canvas {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  z-index: 1;
 }
 
 .revelation-center {
@@ -395,12 +399,14 @@ body {
   text-indent: 0.18em;
   user-select: none;
   position: relative;
+  will-change: filter;
 }
 
 .abyss-char {
   display: inline-block;
-  will-change: transform, opacity, filter;
   color: #ffffff;
+  opacity: 0;
+  will-change: transform, opacity, filter, text-shadow;
 }
 
 .abyss-sub-title {
@@ -408,10 +414,11 @@ body {
   font-size: clamp(0.85rem, 1.8vw, 1.15rem);
   letter-spacing: 0.35em;
   text-transform: uppercase;
-  color: #71717a;
+  color: #737373;
   margin-bottom: 2.75rem;
   text-indent: 0.35em;
-  will-change: transform, opacity, letter-spacing;
+  opacity: 0;
+  will-change: transform, opacity, filter;
 }
 
 .revelation-actions {
@@ -421,6 +428,7 @@ body {
   gap: 1.25rem;
   font-family: var(--font-mono);
   font-size: 0.85rem;
+  opacity: 0;
   will-change: transform, opacity;
 }
 
@@ -446,6 +454,8 @@ body {
   font-family: var(--font-mono);
   font-size: 0.75rem;
   color: #333333;
+  opacity: 0;
+  will-change: opacity;
 }
 
 .bottom-nav a {
@@ -505,7 +515,10 @@ body {
     font-size: 0.8rem;
   }
   .the-void {
-    min-height: 160vh;
+    min-height: 90vh;
+  }
+  .revelation-track {
+    height: 190vh;
   }
   .abyss-main-title {
     font-size: clamp(3.75rem, 13vw, 7rem);
@@ -596,7 +609,10 @@ body {
     font-size: 0.68rem;
   }
   .the-void {
-    min-height: 130vh;
+    min-height: 75vh;
+  }
+  .revelation-track {
+    height: 175vh;
   }
   .abyss-main-title {
     font-size: clamp(2.75rem, 15vw, 4.25rem);
@@ -662,6 +678,15 @@ body {
 </style>
 </head>
 <body>
+
+<svg class="svg-defs" aria-hidden="true">
+  <defs>
+    <filter id="abyss-current-filter" x="-25%" y="-40%" width="150%" height="180%" color-interpolation-filters="sRGB">
+      <feTurbulence id="current-turbulence" type="fractalNoise" baseFrequency="0.012 0.048" numOctaves="2" seed="4" result="noise" />
+      <feDisplacementMap id="current-displacement" in="SourceGraphic" in2="noise" scale="0" xChannelSelector="R" yChannelSelector="G" />
+    </filter>
+  </defs>
+</svg>
 
 <div class="depth-track-system">
   <div class="depth-rail">
@@ -870,34 +895,35 @@ body {
   <div class="void-pulse"></div>
 </div>
 
-<section class="revelation" id="stage-revelation" data-depth="-Infinity" data-zone="THE ABYSS">
-  <canvas class="abyssal-currents-canvas" id="abyssal-canvas"></canvas>
-  <div class="revelation-center">
-    <h1 class="abyss-main-title" id="abyss-title" aria-label="ABYSS">
-      <span class="abyss-char">A</span>
-      <span class="abyss-char">B</span>
-      <span class="abyss-char">Y</span>
-      <span class="abyss-char">S</span>
-      <span class="abyss-char">S</span>
-    </h1>
-    <p class="abyss-sub-title" id="abyss-subtitle">programming language</p>
+<div class="revelation-track" id="stage-revelation-track">
+  <section class="revelation" id="stage-revelation" data-depth="-Infinity" data-zone="THE ABYSS">
+    <div class="revelation-center">
+      <h1 class="abyss-main-title" id="abyss-title" aria-label="ABYSS">
+        <span class="abyss-char">A</span>
+        <span class="abyss-char">B</span>
+        <span class="abyss-char">Y</span>
+        <span class="abyss-char">S</span>
+        <span class="abyss-char">S</span>
+      </h1>
+      <p class="abyss-sub-title" id="abyss-subtitle">programming language</p>
 
-    <div class="revelation-actions" id="revelation-actions">
-      <a href="/abyss/docs/" class="revelation-link">docs</a>
-      <a href="https://github.com/jhosein58/abyss" target="_blank" rel="noopener noreferrer" class="revelation-link">github</a>
+      <div class="revelation-actions" id="revelation-actions">
+        <a href="/abyss/docs/" class="revelation-link">docs</a>
+        <a href="https://github.com/jhosein58/abyss" target="_blank" rel="noopener noreferrer" class="revelation-link">github</a>
+      </div>
     </div>
-  </div>
 
-  <div class="bottom-nav">
-    <a href="#stage-0">0m</a>
-    <span>&bull;</span>
-    <a href="/abyss/docs/">docs</a>
-    <span>&bull;</span>
-    <a href="/">root</a>
-    <span>&bull;</span>
-    <a href="https://github.com/jhosein58/abyss/blob/main/LICENSE" target="_blank" rel="noopener noreferrer">mit</a>
-  </div>
-</section>
+    <div class="bottom-nav" id="bottom-nav">
+      <a href="#stage-0">0m</a>
+      <span>&bull;</span>
+      <a href="/abyss/docs/">docs</a>
+      <span>&bull;</span>
+      <a href="/">root</a>
+      <span>&bull;</span>
+      <a href="https://github.com/jhosein58/abyss/blob/main/LICENSE" target="_blank" rel="noopener noreferrer">mit</a>
+    </div>
+  </section>
+</div>
 
 <script>
 const depthDisplay = document.getElementById('depth-display');
@@ -912,7 +938,15 @@ const stage200 = document.getElementById('stage-200');
 const stage4000 = document.getElementById('stage-4000');
 const stage6000 = document.getElementById('stage-6000');
 const stageVoid = document.getElementById('stage-void');
-const stageRev = document.getElementById('stage-revelation');
+const stageRevTrack = document.getElementById('stage-revelation-track');
+
+const abyssTitle = document.getElementById('abyss-title');
+const chars = document.querySelectorAll('.abyss-char');
+const subtitle = document.getElementById('abyss-subtitle');
+const actions = document.getElementById('revelation-actions');
+const bottomNav = document.getElementById('bottom-nav');
+const dispMap = document.getElementById('current-displacement');
+const turbMap = document.getElementById('current-turbulence');
 
 const stages = [
   { el: stage0, depth: 0 },
@@ -935,9 +969,9 @@ let wasInfinite = false;
 
 function updateHUD() {
   const scrollTop = window.scrollY || document.documentElement.scrollTop;
+  const maxScroll = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
   const s0Top = stage0 ? stage0.offsetTop : 0;
   const sVoidTop = stageVoid ? stageVoid.offsetTop : 3000;
-  const sRevTop = stageRev ? stageRev.offsetTop : 5000;
 
   const railRect = depthRail.getBoundingClientRect();
   const dotRect = depthDot.getBoundingClientRect();
@@ -975,26 +1009,26 @@ function updateHUD() {
     depthDisplay.textContent = currentDepth.toLocaleString() + 'm';
     depthDisplay.classList.remove('infinite-mode', 'infinite-transition');
     zoneDisplay.textContent = getZoneName(currentDepth);
-    zoneDisplay.style.color = '#71717a';
+    zoneDisplay.style.color = '#737373';
     wasInfinite = false;
   } else {
-    const voidRatio = sRevTop > sVoidTop ? Math.min(Math.max((scrollTop - sVoidTop) / (sRevTop - sVoidTop), 0), 1) : 1;
+    const voidRatio = maxScroll > sVoidTop ? Math.min(Math.max((scrollTop - sVoidTop) / (maxScroll - sVoidTop), 0), 1) : 1;
     depthBar.style.height = (railBottom - railTop) + 'px';
     targetY = railBottom + voidRatio * (dotCenter - railBottom);
 
-    if (voidRatio >= 0.92) {
+    if (voidRatio >= 0.96) {
       depthDot.classList.add('lit');
     } else {
       depthDot.classList.remove('lit');
     }
 
     zoneDisplay.textContent = 'THE ABYSS';
-    zoneDisplay.style.color = '#a1a1aa';
+    zoneDisplay.style.color = '#a3a3a3';
 
-    if (voidRatio < 0.88) {
+    if (voidRatio < 0.94) {
       wasInfinite = false;
       depthDisplay.classList.remove('infinite-mode', 'infinite-transition');
-      const surgeRatio = voidRatio / 0.88;
+      const surgeRatio = voidRatio / 0.94;
       const exponent = Math.pow(surgeRatio, 4.2);
       const acceleratedDepth = Math.round(11000 + exponent * 98000000000);
       const jitter = Math.floor(Math.random() * (exponent * 8000000 + 49));
@@ -1016,165 +1050,163 @@ function updateHUD() {
   depthTracker.style.transform = 'translateY(' + trackerY + 'px)';
 }
 
-const canvas = document.getElementById('abyssal-canvas');
-const ctx = canvas ? canvas.getContext('2d') : null;
-let particles = [];
-let animWidth = 0;
-let animHeight = 0;
+let smoothP = 0;
+let isLockedClean = false;
 
-function initCurrents() {
-  if (!canvas) return;
-  const dpr = Math.min(window.devicePixelRatio || 1, 2);
-  const rect = canvas.parentElement.getBoundingClientRect();
-  animWidth = rect.width;
-  animHeight = rect.height;
-  canvas.width = Math.floor(animWidth * dpr);
-  canvas.height = Math.floor(animHeight * dpr);
-  if (ctx) {
-    ctx.setTransform(1, 0, 0, 1, 0, 0);
-    ctx.scale(dpr, dpr);
-  }
+const charSeeds = [
+  { threshold: 0.04, span: 0.86, freq1: 11.5, phase1: 0.2, freq2: 6.8, phase2: 1.4, driftX: -6, driftY: 16 },
+  { threshold: 0.14, span: 0.80, freq1: 13.2, phase1: 2.1, freq2: 7.4, phase2: 0.5, driftX: 4, driftY: 22 },
+  { threshold: 0.00, span: 0.88, freq1: 10.4, phase1: 4.0, freq2: 5.9, phase2: 2.8, driftX: -2, driftY: 12 },
+  { threshold: 0.18, span: 0.78, freq1: 14.1, phase1: 1.1, freq2: 8.2, phase2: 3.7, driftX: 7, driftY: 24 },
+  { threshold: 0.09, span: 0.84, freq1: 12.3, phase1: 3.3, freq2: 6.3, phase2: 1.9, driftX: -5, driftY: 18 }
+];
 
-  particles = [];
-  const count = Math.min(Math.floor(animWidth * 0.08), 50);
-  for (let i = 0; i < count; i++) {
-    particles.push({
-      x: Math.random() * animWidth,
-      y: Math.random() * animHeight,
-      len: Math.random() * 90 + 35,
-      speed: Math.random() * 1.8 + 0.8,
-      w: Math.random() * 1.5 + 0.5,
-      alpha: Math.random() * 0.28 + 0.06,
-      amp: Math.random() * 22 + 8,
-      freq: Math.random() * 0.012 + 0.005,
-      phase: Math.random() * Math.PI * 2
-    });
-  }
-}
-
-let lastScrollY = window.scrollY || 0;
-let scrollVelocity = 0;
-
-function renderFrame() {
+function renderEmergence() {
   const scrollTop = window.scrollY || document.documentElement.scrollTop;
-  const deltaScroll = Math.abs(scrollTop - lastScrollY);
-  scrollVelocity = scrollVelocity * 0.88 + deltaScroll * 0.12;
-  lastScrollY = scrollTop;
-
   const maxScroll = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
-  const sVoidTop = stageVoid ? stageVoid.offsetTop : 3000;
+  const trackTop = stageRevTrack ? stageRevTrack.offsetTop - window.innerHeight * 0.25 : 3200;
 
-  let p = 0;
-  if (scrollTop > sVoidTop) {
-    p = Math.min(Math.max((scrollTop - sVoidTop) / (maxScroll - sVoidTop), 0), 1);
+  let targetP = 0;
+  if (scrollTop > trackTop) {
+    targetP = Math.min(Math.max((scrollTop - trackTop) / (maxScroll - trackTop), 0), 1);
+  }
+
+  smoothP += (targetP - smoothP) * 0.14;
+  if (Math.abs(targetP - smoothP) < 0.0008) {
+    smoothP = targetP;
+  }
+
+  if (targetP >= 0.992 && smoothP >= 0.988) {
+    if (!isLockedClean) {
+      isLockedClean = true;
+      if (dispMap) dispMap.setAttribute('scale', '0');
+      if (abyssTitle) abyssTitle.style.filter = 'none';
+
+      for (let i = 0; i < chars.length; i++) {
+        chars[i].style.opacity = '1';
+        chars[i].style.filter = 'none';
+        chars[i].style.transform = 'none';
+        chars[i].style.textShadow = 'none';
+      }
+
+      if (subtitle) {
+        subtitle.style.opacity = '1';
+        subtitle.style.transform = 'none';
+        subtitle.style.filter = 'none';
+      }
+      if (actions) {
+        actions.style.opacity = '1';
+        actions.style.transform = 'none';
+      }
+      if (bottomNav) {
+        bottomNav.style.opacity = '1';
+      }
+    }
+    requestAnimationFrame(renderEmergence);
+    return;
+  }
+
+  isLockedClean = false;
+
+  if (smoothP <= 0.002) {
+    if (abyssTitle) abyssTitle.style.filter = 'none';
+    for (let i = 0; i < chars.length; i++) {
+      chars[i].style.opacity = '0';
+      chars[i].style.filter = 'none';
+      chars[i].style.transform = 'none';
+      chars[i].style.textShadow = 'none';
+    }
+    if (subtitle) subtitle.style.opacity = '0';
+    if (actions) actions.style.opacity = '0';
+    if (bottomNav) bottomNav.style.opacity = '0';
+    requestAnimationFrame(renderEmergence);
+    return;
   }
 
   const time = performance.now() * 0.001;
+  const settle = Math.min(Math.max((smoothP - 0.82) / 0.17, 0), 1);
+  const currentEnvelope = Math.pow(1 - smoothP, 1.35) * (1 - settle * 0.85);
 
-  if (ctx && animWidth > 0 && animHeight > 0) {
-    const revRect = stageRev ? stageRev.getBoundingClientRect() : null;
-    if (revRect && revRect.bottom > 0 && revRect.top < window.innerHeight) {
-      ctx.clearRect(0, 0, animWidth, animHeight);
-
-      if (p > 0.2) {
-        const auraP = Math.min(Math.max((p - 0.2) / 0.8, 0), 1);
-        const auraAlpha = auraP * 0.13;
-        const cx = animWidth * 0.5;
-        const cy = animHeight * 0.5;
-        const grad = ctx.createRadialGradient(cx, cy, 10, cx, cy, Math.min(animWidth, animHeight) * 0.48);
-        grad.addColorStop(0, 'rgba(255, 255, 255, ' + auraAlpha.toFixed(3) + ')');
-        grad.addColorStop(0.4, 'rgba(255, 255, 255, ' + (auraAlpha * 0.35).toFixed(3) + ')');
-        grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
-        ctx.fillStyle = grad;
-        ctx.fillRect(0, 0, animWidth, animHeight);
-      }
-
-      const velFactor = 1 + Math.min(scrollVelocity * 0.08, 3.5);
-      for (let i = 0; i < particles.length; i++) {
-        const pt = particles[i];
-        pt.y -= pt.speed * velFactor;
-        if (pt.y < -pt.len) {
-          pt.y = animHeight + pt.len;
-          pt.x = Math.random() * animWidth;
-        }
-
-        const wave1 = Math.sin(pt.y * pt.freq + time * 1.6 + pt.phase) * pt.amp;
-        const wave2 = Math.sin((pt.y - pt.len) * pt.freq + time * 1.6 + pt.phase) * pt.amp;
-
-        ctx.beginPath();
-        ctx.moveTo(pt.x + wave1, pt.y);
-        ctx.lineTo(pt.x + wave2, pt.y - pt.len);
-        ctx.strokeStyle = 'rgba(255, 255, 255, ' + (pt.alpha * (0.35 + p * 0.65)).toFixed(3) + ')';
-        ctx.lineWidth = pt.w;
-        ctx.stroke();
-      }
+  if (dispMap && turbMap && abyssTitle) {
+    const dispScale = currentEnvelope * 34;
+    if (dispScale > 0.35) {
+      const freqX = (0.011 + Math.sin(smoothP * 6 + time * 0.4) * 0.002).toFixed(4);
+      const freqY = (0.045 + Math.cos(smoothP * 5 - time * 0.35) * 0.008).toFixed(4);
+      turbMap.setAttribute('baseFrequency', freqX + ' ' + freqY);
+      dispMap.setAttribute('scale', dispScale.toFixed(2));
+      abyssTitle.style.filter = 'url(#abyss-current-filter)';
+    } else {
+      dispMap.setAttribute('scale', '0');
+      abyssTitle.style.filter = 'none';
     }
   }
 
-  const chars = document.querySelectorAll('.abyss-char');
-  const staggers = [0.12, 0.22, 0.04, 0.28, 0.18];
-
   for (let i = 0; i < chars.length; i++) {
-    const charEl = chars[i];
-    const s = staggers[i % staggers.length];
-    const cp = Math.min(Math.max((p - s) / 0.72, 0), 1);
-    const ease = Math.pow(cp, 2.4);
-    const turb = 1 - ease;
+    const c = charSeeds[i];
+    const rawLocal = Math.min(Math.max((smoothP - c.threshold) / c.span, 0), 1);
+    const baseEase = Math.pow(rawLocal, 1.85);
 
-    const waveY = Math.sin(time * 2.4 + i * 1.7) * (turb * 26);
-    const waveX = Math.cos(time * 1.9 + i * 2.2) * (turb * 18);
-    const transY = turb * (85 + i * 12) + waveY;
-    const transX = waveX;
-    const scale = 0.72 + ease * 0.28 + Math.sin(time * 1.5 + i) * (turb * 0.05);
-    const rot = Math.sin(time * 1.7 + i * 1.4) * (turb * 4.5);
-    const blur = Math.max(0, turb * 25);
-    const opacity = p > 0.02 ? Math.min(Math.max(ease * 1.25, 0.06 * turb), 1) : 0;
+    const wave1 = Math.sin(rawLocal * c.freq1 + c.phase1 + time * 0.9 * (1 - rawLocal));
+    const wave2 = Math.cos(rawLocal * c.freq2 + c.phase2 - time * 0.7 * (1 - rawLocal));
+    const pocket = (wave1 * 0.55 + wave2 * 0.45) * Math.sin(rawLocal * Math.PI);
 
-    const glowSpread = turb * 35 + (p >= 0.98 ? 16 : 8);
-    const glowAlpha = ease * 0.95 + turb * 0.25;
+    const depthRemaining = Math.max(0, 1 - baseEase);
+    const nonUniformBlur = Math.max(0, (depthRemaining * 26 + Math.max(0, -pocket) * 11 * depthRemaining) * (1 - settle * 0.92));
 
-    charEl.style.transform = 'translate3d(' + transX.toFixed(2) + 'px, ' + transY.toFixed(2) + 'px, 0) scale(' + scale.toFixed(3) + ') rotate(' + rot.toFixed(2) + 'deg)';
-    charEl.style.filter = blur > 0.1 ? 'blur(' + blur.toFixed(2) + 'px)' : 'none';
-    charEl.style.opacity = opacity.toFixed(3);
-    charEl.style.textShadow = '0 0 ' + glowSpread.toFixed(1) + 'px rgba(255, 255, 255, ' + glowAlpha.toFixed(2) + '), 0 0 ' + (glowSpread * 2.2).toFixed(1) + 'px rgba(255, 255, 255, ' + (glowAlpha * 0.45).toFixed(2) + ')';
+    const lightPulse = Math.max(0, baseEase + pocket * 0.28 * (1 - rawLocal * 0.6));
+    const opacity = Math.min(Math.max(lightPulse, 0), 1);
+
+    const brightness = 0.25 + 0.75 * baseEase + Math.max(0, pocket) * 0.35 * (1 - settle);
+    const driftFactor = Math.pow(depthRemaining, 1.5) * (1 - settle);
+    const tx = (c.driftX * driftFactor + wave2 * 3.5 * driftFactor).toFixed(2);
+    const ty = (c.driftY * driftFactor + wave1 * 5.0 * driftFactor).toFixed(2);
+
+    const halationStrength = Math.sin(rawLocal * Math.PI) * (1 - settle);
+    const halationBlur = (halationStrength * 22).toFixed(1);
+    const halationAlpha = (halationStrength * 0.38).toFixed(3);
+
+    chars[i].style.opacity = opacity.toFixed(3);
+    chars[i].style.transform = driftFactor > 0.005 ? 'translate3d(' + tx + 'px, ' + ty + 'px, 0)' : 'none';
+    chars[i].style.filter = nonUniformBlur > 0.15
+      ? 'blur(' + nonUniformBlur.toFixed(2) + 'px) brightness(' + brightness.toFixed(2) + ')'
+      : 'none';
+    chars[i].style.textShadow = halationStrength > 0.02
+      ? '0 0 ' + halationBlur + 'px rgba(255, 255, 255, ' + halationAlpha + ')'
+      : 'none';
   }
 
-  const subtitle = document.getElementById('abyss-subtitle');
   if (subtitle) {
-    const subP = Math.min(Math.max((p - 0.78) / 0.20, 0), 1);
-    subtitle.style.opacity = subP.toFixed(3);
-    subtitle.style.transform = 'translateY(' + ((1 - subP) * 16).toFixed(1) + 'px)';
-    subtitle.style.letterSpacing = (0.22 + subP * 0.13).toFixed(3) + 'em';
+    const subP = Math.min(Math.max((smoothP - 0.74) / 0.22, 0), 1);
+    const subEase = subP * subP * (3 - 2 * subP);
+    const subBlur = (1 - subEase) * 8;
+    subtitle.style.opacity = subEase.toFixed(3);
+    subtitle.style.transform = subEase < 0.995 ? 'translate3d(0, ' + ((1 - subEase) * 10).toFixed(2) + 'px, 0)' : 'none';
+    subtitle.style.filter = subBlur > 0.15 ? 'blur(' + subBlur.toFixed(2) + 'px)' : 'none';
   }
 
-  const actions = document.getElementById('revelation-actions');
   if (actions) {
-    const actP = Math.min(Math.max((p - 0.84) / 0.15, 0), 1);
-    actions.style.opacity = actP.toFixed(3);
-    actions.style.transform = 'translateY(' + ((1 - actP) * 14).toFixed(1) + 'px)';
+    const actP = Math.min(Math.max((smoothP - 0.82) / 0.16, 0), 1);
+    const actEase = actP * actP * (3 - 2 * actP);
+    actions.style.opacity = actEase.toFixed(3);
+    actions.style.transform = actEase < 0.995 ? 'translate3d(0, ' + ((1 - actEase) * 8).toFixed(2) + 'px, 0)' : 'none';
   }
 
-  requestAnimationFrame(renderFrame);
+  if (bottomNav) {
+    const navP = Math.min(Math.max((smoothP - 0.86) / 0.13, 0), 1);
+    bottomNav.style.opacity = navP.toFixed(3);
+  }
+
+  requestAnimationFrame(renderEmergence);
 }
 
 window.addEventListener('scroll', updateHUD, { passive: true });
-window.addEventListener('resize', () => {
-  updateHUD();
-  initCurrents();
-});
-window.addEventListener('orientationchange', () => {
-  updateHUD();
-  initCurrents();
-});
+window.addEventListener('resize', updateHUD);
+window.addEventListener('orientationchange', updateHUD);
 window.addEventListener('DOMContentLoaded', () => {
   updateHUD();
-  initCurrents();
-  requestAnimationFrame(renderFrame);
+  requestAnimationFrame(renderEmergence);
 });
-window.addEventListener('load', () => {
-  updateHUD();
-  initCurrents();
-});
+window.addEventListener('load', updateHUD);
 updateHUD();
 
 document.querySelectorAll('.code-copy').forEach(btn => {
