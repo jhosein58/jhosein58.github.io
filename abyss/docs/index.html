@@ -98,37 +98,21 @@ body {
 }
 
 .brand-link {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 0.65rem;
   text-decoration: none;
   color: #ffffff;
 }
 
 .brand-logo {
-  width: 20px;
   height: 20px;
+  width: auto;
+  display: block;
 }
 
-.brand-title {
-  font-family: var(--font-sans);
-  font-weight: 800;
-  font-size: 1.1rem;
-  letter-spacing: 0.08em;
-  color: #ffffff;
-}
-
-.brand-badge {
-  font-family: var(--font-mono);
-  font-size: 0.62rem;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: #a1a1aa;
-  background: #0d0d0d;
-  border: 1px solid #1a1a1a;
-  padding: 0.15rem 0.45rem;
-  border-radius: 4px;
+.abyss-glyph {
+  fill: #FDFCFD;
+  fill-rule: evenodd;
 }
 
 .breadcrumb {
@@ -151,29 +135,30 @@ body {
 .topbar-right {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.5rem;
 }
 
 .topbar-btn {
   display: inline-flex;
   align-items: center;
   gap: 0.45rem;
-  padding: 0.45rem 0.85rem;
-  font-family: var(--font-mono);
-  font-size: 0.78rem;
-  color: var(--text-muted);
+  padding: 0.35rem 0.6rem;
+  font-family: var(--font-sans);
+  font-size: 0.84rem;
+  font-weight: 500;
+  color: #888888;
   text-decoration: none;
-  background: #000000;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  transition: all 0.15s ease;
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  transition: color 0.15s ease;
   touch-action: manipulation;
 }
 
 .topbar-btn:hover {
   color: #ffffff;
-  border-color: var(--border-focus);
-  background: #0a0a0a;
+  background: transparent;
+  border: none;
 }
 
 .menu-toggle {
@@ -297,8 +282,8 @@ body {
 
 .nav-link.active {
   color: #ffffff;
-  background: #0e0e0e;
-  border-left: 2px solid #ffffff;
+  background: #111111;
+  border-left: none;
   font-weight: 600;
 }
 
@@ -743,13 +728,22 @@ code.code-content {
     <button class="menu-toggle" id="menu-toggle" aria-label="Toggle Menu">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
     </button>
-    <a href="/abyss" class="brand-link">
-      <svg class="brand-logo" viewBox="0 0 1254 1254" fill="currentColor">
-        <polygon points="564.2,313.5 692.1,313.5 975.0,939.5 854.0,939.5 627.9,436.3 392.2,939.5 270.6,939.5"/>
-        <circle cx="626.3" cy="705.1" r="67.5"/>
+    <a href="/abyss" class="brand-link" aria-label="Abyss">
+      <svg class="brand-logo" viewBox="240 280 2860 690">
+        <defs>
+          <filter id="soft-shadow" x="-10%" y="-10%" width="120%" height="120%">
+            <feDropShadow dx="0" dy="1" stdDeviation="3.5" flood-color="#000000" flood-opacity="0.16" />
+          </filter>
+        </defs>
+        <g class="abyss-glyph" filter="url(#soft-shadow)">
+          <polygon points="564.2,313.5 692.1,313.5 975.0,939.5 854.0,939.5 627.9,436.3 392.2,939.5 270.6,939.5" />
+          <circle cx="626.3" cy="705.1" r="67.5" />
+          <path d="M 1065,313.5 H 1305 A 182.5,182.5 0 0,1 1432.6,626.5 A 182.5,182.5 0 0,1 1305,939.5 H 1065 Z M 1175,417.5 H 1305 A 78.5,78.5 0 0,1 1305,574.5 H 1175 Z M 1175,678.5 H 1305 A 78.5,78.5 0 0,1 1305,835.5 H 1175 Z" />
+          <polygon points="1540,313.5 1664,313.5 1795,568.0 1926,313.5 2050,313.5 1850,678.0 1850,939.5 1740,939.5 1740,678.0" />
+          <path d="M 2495,313.5 H 2292.5 A 182.5,182.5 0 0,0 2292.5,678.5 H 2352.5 A 78.5,78.5 0 0,1 2352.5,835.5 H 2140 V 939.5 H 2352.5 A 182.5,182.5 0 0,0 2352.5,574.5 H 2292.5 A 78.5,78.5 0 0,1 2292.5,417.5 H 2495 Z" />
+          <path d="M 3020,313.5 H 2817.5 A 182.5,182.5 0 0,0 2817.5,678.5 H 2877.5 A 78.5,78.5 0 0,1 2877.5,835.5 H 2665 V 939.5 H 2877.5 A 182.5,182.5 0 0,0 2877.5,574.5 H 2817.5 A 78.5,78.5 0 0,1 2817.5,417.5 H 3020 Z" />
+        </g>
       </svg>
-      <span class="brand-title">ABYSS</span>
-      <span class="brand-badge">DOCS</span>
     </a>
     <div class="breadcrumb">
       <span class="breadcrumb-sep">/</span>
