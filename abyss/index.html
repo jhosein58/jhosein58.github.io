@@ -11,7 +11,7 @@
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1254 1254'%3E%3Cpolygon points='564.2,313.5 692.1,313.5 975.0,939.5 854.0,939.5 627.9,436.3 392.2,939.5 270.6,939.5' fill='%23FDFCFD'/%3E%3Ccircle cx='626.3' cy='705.1' r='67.5' fill='%23FDFCFD'/%3E%3C/svg%3E" />
 <style>
 :root {
-  --bg-color: #05070a;
+  --bg-color: #000000;
   --text-main: #f0f0f0;
   --text-dim: #707070;
   --text-muted: #3a3a3a;
@@ -40,14 +40,13 @@ html {
 }
 
 body {
-  background-color: var(--bg-color);
+  background-color: #000000;
   min-height: 100vh;
   min-height: 100dvh;
   width: 100%;
   max-width: 100vw;
   position: relative;
   overflow-x: hidden;
-  transition: background-color 0.1s ease-out;
 }
 
 .depth-track-system {
@@ -287,11 +286,11 @@ body {
 }
 
 .kw { color: #ffffff; font-weight: 600; }
-.ty { color: #8e8e8e; }
-.fn { color: #cfcfcf; }
-.str { color: #aaaaaa; }
-.num { color: #6e6e6e; }
-.op { color: #777777; }
+.ty { color: #c7d2fe; font-weight: 500; }
+.fn { color: #fde047; }
+.str { color: #86efac; }
+.num { color: #fdba74; }
+.op { color: #71717a; }
 
 .scroll-prompt {
   margin-top: 3.5rem;
@@ -676,7 +675,7 @@ body {
 <pre><code id="code-0"><span class="kw">import</span> print <span class="kw">from</span> <span class="str">"std/io"</span>
 
 <span class="fn">main</span> <span class="op">::</span> <span class="kw">fn</span>() {
-    <span class="str">"Hello, world!"</span>.<span class="fn">print</span>()
+    <span class="fn">print</span>(<span class="str">"Hello from the deep!\n"</span>)
 }</code></pre>
       </div>
     </div>
@@ -698,9 +697,9 @@ body {
 
     <div class="spec-pills">
       <span class="pill">Orthogonal Grammar</span>
-      <span class="pill">Method Call Syntax</span>
-      <span class="pill">Zero Header Files</span>
-      <span class="pill">Struct Composition</span>
+      <span class="pill">Method Receivers (self &Self)</span>
+      <span class="pill">Struct Literals</span>
+      <span class="pill">Implicit Return</span>
     </div>
 
     <div class="code-box">
@@ -709,7 +708,15 @@ body {
         <button class="code-copy" data-target="code-200">Copy</button>
       </div>
       <div class="code-content">
-<pre><code id="code-200"><span class="kw">import</span> println_i32 <span class="kw">from</span> <span class="str">"std/io"</span>
+<pre><code id="code-200"><span class="kw">import</span> print <span class="kw">from</span> <span class="str">"std/io"</span>
+
+<span class="ty">Point</span> <span class="op">::</span> <span class="kw">struct</span> {
+    x, y <span class="ty">i32</span>
+
+    <span class="fn">dist_sq</span> <span class="op">::</span> <span class="kw">fn</span>(self <span class="ty">&Self</span>) <span class="ty">i32</span> {
+        self.x <span class="op">*</span> self.x <span class="op">+</span> self.y <span class="op">*</span> self.y
+    }
+}
 
 <span class="ty">Rect</span> <span class="op">::</span> <span class="kw">struct</span> {
     w, h <span class="ty">i32</span>
@@ -724,9 +731,14 @@ body {
 }
 
 <span class="fn">main</span> <span class="op">::</span> <span class="kw">fn</span>() {
+    p: <span class="ty">Point</span> <span class="op">=</span> .{ x: <span class="num">3</span>, y: <span class="num">4</span> }
     r: <span class="ty">Rect</span> <span class="op">=</span> .{ w: <span class="num">10</span>, h: <span class="num">20</span> }
-    r.<span class="fn">area</span>().<span class="fn">println_i32</span>()
-    r.<span class="fn">scale</span>(<span class="num">3</span>).<span class="fn">println_i32</span>()
+
+    <span class="fn">print</span>(<span class="str">"Distance squared: "</span>)
+    <span class="fn">print</span>(p.<span class="fn">dist_sq</span>())
+    <span class="fn">print</span>(<span class="str">"\nArea: "</span>)
+    <span class="fn">print</span>(r.<span class="fn">area</span>())
+    <span class="fn">print</span>(<span class="str">"\n"</span>)
 }</code></pre>
       </div>
     </div>
@@ -736,37 +748,43 @@ body {
 <section class="stage-section" id="stage-4000" data-depth="-4000" data-zone="MIDNIGHT ZONE">
   <div class="container">
     <div class="depth-tag">Depth -4,000m &bull; Midnight Zone</div>
-    <h2 class="stage-title">Linear Memory & Unification Types.</h2>
+    <h2 class="stage-title">Compile-Time Evaluation & Types.</h2>
     <p class="stage-desc">
-      Bidirectional Hindley-Milner type inference removes type verbosity while enforcing strict sizing from i8 to i64 and f32 to f64. Fast bump Arena allocators replace unpredictable garbage collection with explicit lifetimes.
+      Run arbitrary logic during compilation using the integrated Bytecode VM via cmpt blocks. Types are first-class values that can be passed to and returned from functions, eliminating template metaprogramming complexity.
     </p>
 
     <div class="spec-pills">
-      <span class="pill">Arena Allocators</span>
-      <span class="pill">Hindley-Milner Engine</span>
+      <span class="pill">Comptime (cmpt)</span>
+      <span class="pill">First-Class Types</span>
+      <span class="pill">Bytecode VM</span>
       <span class="pill">Zero Garbage Collector</span>
-      <span class="pill">Dense Sized Types</span>
     </div>
 
     <div class="code-box">
       <div class="code-bar">
-        <span class="code-name">allocator.a</span>
+        <span class="code-name">comptime.a</span>
         <button class="code-copy" data-target="code-4000">Copy</button>
       </div>
       <div class="code-content">
-<pre><code id="code-4000"><span class="kw">import</span> Arena <span class="kw">from</span> <span class="str">"std/allocator"</span>
-<span class="kw">import</span> Vec <span class="kw">from</span> <span class="str">"std/collections/vec"</span>
-<span class="kw">import</span> print <span class="kw">from</span> <span class="str">"std/io"</span>
+<pre><code id="code-4000"><span class="kw">import</span> print <span class="kw">from</span> <span class="str">"std/io"</span>
+
+<span class="fn">TypeByCond</span> <span class="op">::</span> <span class="kw">fn</span>(cond <span class="ty">bool</span>) <span class="ty">type</span> {
+    <span class="kw">if</span> cond { <span class="ty">i32</span> } <span class="kw">else</span> { <span class="ty">f32</span> }
+}
 
 <span class="fn">main</span> <span class="op">::</span> <span class="kw">fn</span>() {
-    arena <span class="op">:=</span> <span class="ty">Arena</span>.<span class="fn">new</span>(<span class="num">1024</span> <span class="op">*</span> <span class="num">1024</span> <span class="op">*</span> <span class="num">16</span>)
-    items <span class="op">:=</span> <span class="ty">Vec</span>.<span class="fn">new</span>(<span class="op">&</span>arena)
+    val <span class="op">:=</span> <span class="kw">cmpt</span> {
+        base <span class="op">:=</span> <span class="num">20</span>
+        base <span class="op">*</span> <span class="num">2</span> <span class="op">+</span> <span class="num">2</span>
+    }
+    <span class="fn">print</span>(<span class="str">"Compile-time evaluated: "</span>)
+    <span class="fn">print</span>(val)
+    <span class="fn">print</span>(<span class="str">"\n"</span>)
 
-    items.<span class="fn">push</span>(<span class="num">1024</span>)
-    items.<span class="fn">push</span>(<span class="num">2048</span>)
-    items.<span class="fn">push</span>(<span class="num">4096</span>)
-
-    <span class="str">"Allocated contiguous elements without runtime pauses."</span>.<span class="fn">print</span>()
+    x: <span class="fn">TypeByCond</span>(<span class="kw">true</span>) <span class="op">=</span> <span class="num">100</span>
+    <span class="fn">print</span>(<span class="str">"Computed type value: "</span>)
+    <span class="fn">print</span>(x)
+    <span class="fn">print</span>(<span class="str">"\n"</span>)
 }</code></pre>
       </div>
     </div>
@@ -778,13 +796,13 @@ body {
     <div class="depth-tag">Depth -6,000m &bull; Abyssal Zone</div>
     <h2 class="stage-title">Data-Oriented Compiler Architecture.</h2>
     <p class="stage-desc">
-      Pointer-heavy AST graphs are banished. The 100% self-hosted compiler stores syntax nodes in flat arena tables identified by dense numeric HirId and TypeId indices, maximizing CPU L1 cache locality, incremental throughput, and emitting deterministic GNU C99.
+      Pointer-heavy AST graphs are banished. The 100% self-hosted compiler stores syntax nodes in flat arena tables identified by dense numeric HirId and TypeId indices, maximizing CPU L1 cache locality, incremental throughput, and emitting deterministic ISO C99.
     </p>
 
     <div class="spec-pills">
       <span class="pill">Data-Oriented (DOP)</span>
       <span class="pill">Dense HirId Tables</span>
-      <span class="pill">Deterministic GNU C99</span>
+      <span class="pill">Deterministic ISO C99</span>
       <span class="pill">Zero-Cost C ABI</span>
     </div>
 
@@ -794,20 +812,28 @@ body {
         <button class="code-copy" data-target="code-6000">Copy</button>
       </div>
       <div class="code-content">
-<pre><code id="code-6000"><span class="ty">HirId</span>  <span class="op">::</span> <span class="ty">u32</span>
-<span class="ty">TypeId</span> <span class="op">::</span> <span class="ty">u32</span>
+<pre><code id="code-6000"><span class="ty">HirId</span>    <span class="op">::</span> <span class="ty">u32</span>
+<span class="ty">TyId</span>     <span class="op">::</span> <span class="ty">u32</span>
+<span class="ty">SymbolId</span> <span class="op">::</span> <span class="ty">u32</span>
 
 <span class="ty">HirNode</span> <span class="op">::</span> <span class="kw">struct</span> {
-    id   <span class="ty">HirId</span>
-    ty   <span class="ty">TypeId</span>
-    span <span class="ty">Span</span>
+    id     <span class="ty">HirId</span>
+    ty     <span class="ty">TyId</span>
+    symbol <span class="ty">SymbolId</span>
 }
 
-<span class="fn">compile_unit</span> <span class="op">::</span> <span class="kw">fn</span>(src <span class="ty">&u8</span>) <span class="ty">i32</span> {
-    ast  <span class="op">:=</span> <span class="fn">parse</span>(src)
-    hir  <span class="op">:=</span> <span class="fn">lower_to_flat_arena</span>(ast)
-    <span class="fn">unify_types</span>(hir)
-    <span class="fn">emit_gnu_c99</span>(hir)
+<span class="ty">Compiler</span> <span class="op">::</span> <span class="kw">struct</span> {
+    count <span class="ty">u32</span>
+
+    <span class="fn">compile_node</span> <span class="op">::</span> <span class="kw">fn</span>(self <span class="ty">&Self</span>, node <span class="ty">&HirNode</span>) <span class="ty">i32</span> {
+        node.id <span class="op">+</span> node.ty
+    }
+}
+
+<span class="fn">main</span> <span class="op">::</span> <span class="kw">fn</span>() {
+    c: <span class="ty">Compiler</span> <span class="op">=</span> .{ count: <span class="num">1</span> }
+    root: <span class="ty">HirNode</span> <span class="op">=</span> .{ id: <span class="num">42</span>, ty: <span class="num">1</span>, symbol: <span class="num">100</span> }
+    status <span class="op">:=</span> c.<span class="fn">compile_node</span>(<span class="op">&</span>root)
 }</code></pre>
       </div>
     </div>
@@ -955,13 +981,6 @@ function updateHUD() {
 
   const trackerY = targetY - (trackerHeight / 2);
   depthTracker.style.transform = 'translateY(' + trackerY + 'px)';
-
-  const docHeight = document.documentElement.scrollHeight - window.innerHeight;
-  const scrollRatio = docHeight > 0 ? Math.min(Math.max(scrollTop / docHeight, 0), 1) : 0;
-  const r = Math.max(0, Math.round(5 * (1 - scrollRatio * 1.5)));
-  const g = Math.max(0, Math.round(7 * (1 - scrollRatio * 1.5)));
-  const b = Math.max(0, Math.round(10 * (1 - scrollRatio * 1.5)));
-  document.body.style.backgroundColor = 'rgb(' + r + ',' + g + ',' + b + ')';
 }
 
 window.addEventListener('scroll', updateHUD, { passive: true });
