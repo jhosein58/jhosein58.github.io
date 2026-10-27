@@ -1,8 +1,8 @@
-const INITIAL_CODE = `import print_cstr from "std/prelude"
+const INITIAL_CODE = `import print from "std/io"
 
 main :: fn() {
-    print_cstr(c"Welcome to the Abyss Playground!\\n")
-    print_cstr(c"Compiled and executed entirely inside WebAssembly.\\n")
+    print("Welcome to the Abyss Playground!")
+    print("Compiled and executed entirely inside WebAssembly.")
 }
 `;
 
@@ -18,12 +18,14 @@ const statusText = document.getElementById("status-text");
 const execTime = document.getElementById("exec-time");
 
 function updateLineNumbers() {
-    const lines = editor.value.split("\n").length;
+    const lines = editor.value.split("\n");
+    const count = lines.length;
     let numbers = "";
-    for (let i = 1; i <= lines; i++) {
+    for (let i = 1; i <= count; i++) {
         numbers += i + "\n";
     }
     lineNumbers.textContent = numbers;
+    lineNumbers.style.width = Math.max(44, (String(count).length * 8 + 20)) + "px";
 }
 
 function updateEditorHighlight() {
@@ -196,6 +198,7 @@ async function runCode() {
 editor.addEventListener("input", () => {
     updateLineNumbers();
     updateEditorHighlight();
+    syncScroll();
 });
 editor.addEventListener("scroll", syncScroll);
 
@@ -214,6 +217,7 @@ editor.addEventListener("keydown", (e) => {
         editor.selectionStart = editor.selectionEnd = start + 4;
         updateLineNumbers();
         updateEditorHighlight();
+        syncScroll();
     }
 });
 

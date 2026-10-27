@@ -247,17 +247,20 @@ html, body {
 
 .line-numbers {
     width: 44px;
+    min-width: 44px;
     padding: 14px 10px 14px 0;
     background: #000000;
     color: #3f3f46;
     font-family: var(--font-mono);
     font-size: 13px;
     line-height: 22px;
+    white-space: pre;
     text-align: right;
     user-select: none;
     border-right: 1px solid var(--border-subtle);
     overflow: hidden;
     flex-shrink: 0;
+    box-sizing: border-box;
 }
 
 #editor-highlight,
