@@ -140,9 +140,15 @@ body {
   align-items: center;
 }
 
+.depth-gauge-wrap {
+  position: relative;
+  height: 52vh;
+  width: 2px;
+}
+
 .depth-rail {
   width: 2px;
-  height: 52vh;
+  height: 100%;
   background: rgba(255, 255, 255, 0.08);
   border-radius: 2px;
   overflow: hidden;
@@ -155,6 +161,55 @@ body {
   background: #ffffff;
   box-shadow: 0 0 6px rgba(255, 255, 255, 0.7);
   border-radius: 2px;
+}
+
+.depth-ticks {
+  position: absolute;
+  left: 6px;
+  top: 0;
+  width: 12px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  pointer-events: none;
+}
+
+.depth-tick {
+  width: 4px;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.14);
+  transform-origin: left center;
+  transition: background-color 0.12s ease, transform 0.15s ease, box-shadow 0.15s ease, width 0.15s ease;
+}
+
+.depth-tick.major {
+  width: 8px;
+  height: 1.5px;
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.depth-tick.passed {
+  background: rgba(255, 255, 255, 0.55);
+}
+
+.depth-tick.major.passed {
+  background: rgba(255, 255, 255, 0.85);
+  box-shadow: 0 0 3px rgba(255, 255, 255, 0.4);
+}
+
+.depth-tick.active {
+  background: #ffffff;
+  width: 7px;
+  box-shadow: 0 0 6px rgba(255, 255, 255, 0.95);
+  transform: scaleY(1.4);
+}
+
+.depth-tick.major.active {
+  background: #ffffff;
+  width: 12px;
+  box-shadow: 0 0 8px #ffffff;
+  transform: scaleY(1.5);
 }
 
 .depth-endpoint {
@@ -610,9 +665,12 @@ body {
     right: 1.25rem;
     top: calc(46px + 8vh);
   }
-  .depth-rail {
+  .depth-gauge-wrap {
     height: 48vh;
     height: 48dvh;
+  }
+  .depth-rail {
+    height: 100%;
   }
   .depth-endpoint {
     margin-top: 18px;
@@ -803,8 +861,11 @@ body {
 </svg>
 
 <div class="depth-track-system">
-  <div class="depth-rail">
-    <div class="depth-rail-fill" id="depth-bar"></div>
+  <div class="depth-gauge-wrap">
+    <div class="depth-rail">
+      <div class="depth-rail-fill" id="depth-bar"></div>
+    </div>
+    <div class="depth-ticks" id="depth-ticks" aria-hidden="true"></div>
   </div>
   <div class="depth-endpoint" id="depth-endpoint" title="Descend to ABYSS" aria-label="Descend to ABYSS">
     <span class="depth-descend-label" id="descend-label">descend</span>
@@ -1084,6 +1145,20 @@ const depthRail = document.querySelector('.depth-rail');
 const topbar = document.getElementById('topbar');
 const descendLabel = document.getElementById('descend-label');
 const depthEndpoint = document.getElementById('depth-endpoint');
+const depthTicksContainer = document.getElementById('depth-ticks');
+const tickCount = 31;
+const tickElements = [];
+
+if (depthTicksContainer) {
+  for (let i = 0; i < tickCount; i++) {
+    const tick = document.createElement('div');
+    const isMajor = i % 5 === 0;
+    tick.className = isMajor ? 'depth-tick major' : 'depth-tick';
+    tick.dataset.major = isMajor ? '1' : '0';
+    depthTicksContainer.appendChild(tick);
+    tickElements.push(tick);
+  }
+}
 
 const stage0 = document.getElementById('stage-0');
 const stage200 = document.getElementById('stage-200');
@@ -1184,7 +1259,7 @@ function updateHUD() {
   } else {
     const voidRatio = maxScroll > sVoidTop ? Math.min(Math.max((scrollTop - sVoidTop) / (maxScroll - sVoidTop), 0), 1) : 1;
     depthBar.style.height = (railBottom - railTop) + 'px';
-    targetY = railBottom + voidRatio * (dotCenter - railBottom);
+    targetY = railBottom;
 
     if (descendLabel) {
       descendLabel.style.opacity = '0';
@@ -1203,6 +1278,26 @@ function updateHUD() {
       depthDisplay.textContent = '-11,000m';
       zoneDisplay.textContent = 'CHALLENGER DEEP';
       zoneDisplay.style.color = '#a3a3a3';
+    }
+  }
+
+  targetY = Math.max(railTop, Math.min(targetY, railBottom));
+
+  const fillRatio = railBottom > railTop ? Math.max(0, Math.min(1, (targetY - railTop) / (railBottom - railTop))) : 0;
+  if (tickElements.length > 0) {
+    const activeIndex = Math.min(tickElements.length - 1, Math.round(fillRatio * (tickElements.length - 1)));
+    for (let i = 0; i < tickElements.length; i++) {
+      const tick = tickElements[i];
+      const isMaj = tick.dataset.major === '1';
+      if (fillRatio === 0) {
+        tick.className = isMaj ? 'depth-tick major' : 'depth-tick';
+      } else if (i < activeIndex) {
+        tick.className = isMaj ? 'depth-tick major passed' : 'depth-tick passed';
+      } else if (i === activeIndex) {
+        tick.className = isMaj ? 'depth-tick major active' : 'depth-tick active';
+      } else {
+        tick.className = isMaj ? 'depth-tick major' : 'depth-tick';
+      }
     }
   }
 
