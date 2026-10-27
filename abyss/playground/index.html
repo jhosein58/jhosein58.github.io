@@ -74,7 +74,10 @@
                 </div>
                 <div class="editor-wrapper">
                     <div id="line-numbers" class="line-numbers"></div>
-                    <textarea id="code-editor" spellcheck="false" autocomplete="off" autocapitalize="off"></textarea>
+                    <div class="editor-stage">
+                        <pre id="editor-highlight" aria-hidden="true"><code id="editor-code"></code></pre>
+                        <textarea id="code-editor" spellcheck="false" autocomplete="off" autocapitalize="off"></textarea>
+                    </div>
                 </div>
             </section>
 
@@ -107,6 +110,7 @@
             </section>
         </main>
     </div>
+    <script src="../syntax.js"></script>
     <script src="app.js"></script>
 </body>
 </html>

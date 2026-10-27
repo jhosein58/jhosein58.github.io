@@ -111,8 +111,20 @@ function updateLineNumbers() {
     lineNumbers.textContent = numbers;
 }
 
+function updateEditorHighlight() {
+    const codeEl = document.getElementById("editor-code");
+    if (codeEl && window.AbyssSyntax) {
+        codeEl.innerHTML = window.AbyssSyntax.highlightAbyss(editor.value) + (editor.value.endsWith("\n") ? "\n" : "");
+    }
+}
+
 function syncScroll() {
     lineNumbers.scrollTop = editor.scrollTop;
+    const highlight = document.getElementById("editor-highlight");
+    if (highlight) {
+        highlight.scrollTop = editor.scrollTop;
+        highlight.scrollLeft = editor.scrollLeft;
+    }
 }
 
 function setStatus(status, text) {
@@ -266,7 +278,10 @@ async function runCode() {
     }
 }
 
-editor.addEventListener("input", updateLineNumbers);
+editor.addEventListener("input", () => {
+    updateLineNumbers();
+    updateEditorHighlight();
+});
 editor.addEventListener("scroll", syncScroll);
 
 editor.addEventListener("keydown", (e) => {
@@ -283,6 +298,7 @@ editor.addEventListener("keydown", (e) => {
         editor.value = editor.value.substring(0, start) + "    " + editor.value.substring(end);
         editor.selectionStart = editor.selectionEnd = start + 4;
         updateLineNumbers();
+        updateEditorHighlight();
     }
 });
 
@@ -291,6 +307,7 @@ exampleSelect.addEventListener("change", (e) => {
     if (EXAMPLES[val]) {
         editor.value = EXAMPLES[val];
         updateLineNumbers();
+        updateEditorHighlight();
     }
 });
 
@@ -299,6 +316,7 @@ resetBtn.addEventListener("click", () => {
     if (EXAMPLES[val]) {
         editor.value = EXAMPLES[val];
         updateLineNumbers();
+        updateEditorHighlight();
     }
 });
 
@@ -319,4 +337,5 @@ runBtn.addEventListener("click", runCode);
 
 editor.value = EXAMPLES.hello;
 updateLineNumbers();
+updateEditorHighlight();
 loadWasm();

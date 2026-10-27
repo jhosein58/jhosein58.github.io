@@ -305,6 +305,13 @@ select:hover {
     background: var(--bg-editor);
 }
 
+.editor-stage {
+    flex: 1;
+    position: relative;
+    height: 100%;
+    overflow: hidden;
+}
+
 .line-numbers {
     width: 48px;
     padding: 16px 8px 16px 0;
@@ -320,26 +327,55 @@ select:hover {
     flex-shrink: 0;
 }
 
+#editor-highlight,
 #code-editor {
-    flex: 1;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
     height: 100%;
     padding: 16px;
-    background: transparent;
-    color: var(--text-code);
+    margin: 0;
+    border: none;
+    outline: none;
     font-family: var(--font-mono);
     font-size: 13px;
     line-height: 22px;
-    border: none;
-    outline: none;
-    resize: none;
+    tab-size: 4;
+    white-space: pre;
+    word-wrap: normal;
+    box-sizing: border-box;
+    letter-spacing: normal;
+}
+
+#editor-highlight {
+    pointer-events: none;
+    overflow: hidden;
+    background: transparent;
+    z-index: 1;
+}
+
+#editor-highlight code {
+    display: block;
+    font-family: inherit;
+    font-size: inherit;
+    line-height: inherit;
     white-space: pre;
     tab-size: 4;
-    overflow: auto;
+}
+
+#code-editor {
+    background: transparent;
+    color: transparent;
     caret-color: var(--accent-cyan);
+    resize: none;
+    overflow: auto;
+    z-index: 2;
 }
 
 #code-editor::selection {
     background: rgba(139, 92, 246, 0.35);
+    color: transparent;
 }
 
 .terminal-header {

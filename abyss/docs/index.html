@@ -10,6 +10,7 @@
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1254 1254'%3E%3Cpolygon points='564.2,313.5 692.1,313.5 975.0,939.5 854.0,939.5 627.9,436.3 392.2,939.5 270.6,939.5' fill='%23FDFCFD'/%3E%3Ccircle cx='626.3' cy='705.1' r='67.5' fill='%23FDFCFD'/%3E%3C/svg%3E" />
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="../syntax.js"></script>
 <style>
 :root {
   --bg-main: #000000;
@@ -541,21 +542,6 @@ code.code-content {
   background: #000000;
 }
 
-.tok-comment { color: #52525b; font-style: italic; }
-.tok-str { color: #86efac; }
-.tok-builtin { color: #7dd3fc; font-weight: 500; }
-.tok-num { color: #fdba74; }
-.tok-op { color: #71717a; }
-.tok-punct { color: #52525b; }
-.tok-kw { color: #ffffff; font-weight: 600; }
-.tok-type { color: #c7d2fe; font-weight: 500; }
-.tok-self { color: #d8b4fe; font-weight: 500; }
-.tok-bool { color: #fbcfe8; font-weight: 500; }
-.tok-fn { color: #fde047; }
-.tok-def { color: #f4f4f5; font-weight: 600; }
-.tok-ident { color: #e4e4e7; }
-.tok-flag { color: #93c5fd; }
-
 .chapter-nav {
   display: flex;
   align-items: center;
@@ -848,79 +834,6 @@ const linearNav = [
 const GITHUB_RAW_BASE = 'https://raw.githubusercontent.com/jhosein58/abyss/main/';
 const docCache = new Map();
 let currentDocId = '';
-
-function escapeHtml(str) {
-  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-}
-
-function highlightAbyss(code) {
-  const pattern = [
-    "--[^\\r\\n]*",
-    "c\"(?:\\\\.|[^\"\\\\])*\"|\"(?:\\\\.|[^\"\\\\])*\"|\\x27(?:\\\\.|[^\\x27\\\\])*\\x27",
-    "@[a-zA-Z_][a-zA-Z0-9_]*",
-    "0[xX][0-9a-fA-F_]+|[0-9_]+\\.[0-9_]+(?:[eE][+-]?[0-9_]+)?|[0-9_]+",
-    "::|:=|\\+=|-=|\\*=|/=|%=|&=|\\|=|\\^=|<<=|>>=|==|!=|<=|>=|<<|>>|->|\\.\\.|\\.|[+\\-*/%=&|^~<>!]",
-    "[;,:#()\\[\\]{}]",
-    "[a-zA-Z_][a-zA-Z0-9_]*",
-    "\\s+",
-    "."
-  ].map(p => "(" + p + ")").join("|");
-
-  const tokenRegex = new RegExp(pattern, "g");
-  const keywords = new Set(["if","else","match","for","in","while","break","cont","ret","cmpt","fn","struct","enum","import","from","as","and","or","not"]);
-  const types = new Set(["u8","u16","u32","u64","u128","usize","i8","i16","i32","i64","i128","isize","f32","f64","bool","type","Self"]);
-  const booleans = new Set(["true","false"]);
-  let out = "";
-  let m;
-  while ((m = tokenRegex.exec(code)) !== null) {
-    const [full, comment, str, builtin, num, op, punct, word, ws, other] = m;
-    if (comment) out += "<span class=\"tok-comment\">" + escapeHtml(comment) + "</span>";
-    else if (str) out += "<span class=\"tok-str\">" + escapeHtml(str) + "</span>";
-    else if (builtin) out += "<span class=\"tok-builtin\">" + escapeHtml(builtin) + "</span>";
-    else if (num) out += "<span class=\"tok-num\">" + escapeHtml(num) + "</span>";
-    else if (op) out += "<span class=\"tok-op\">" + escapeHtml(op) + "</span>";
-    else if (punct) out += "<span class=\"tok-punct\">" + escapeHtml(punct) + "</span>";
-    else if (word) {
-      if (keywords.has(word)) out += "<span class=\"tok-kw\">" + escapeHtml(word) + "</span>";
-      else if (types.has(word) || /^[A-Z]/.test(word)) out += "<span class=\"tok-type\">" + escapeHtml(word) + "</span>";
-      else if (word === "self") out += "<span class=\"tok-self\">" + escapeHtml(word) + "</span>";
-      else if (booleans.has(word)) out += "<span class=\"tok-bool\">" + escapeHtml(word) + "</span>";
-      else {
-        const rest = code.slice(tokenRegex.lastIndex).trimStart();
-        if (rest.startsWith("(")) out += "<span class=\"tok-fn\">" + escapeHtml(word) + "</span>";
-        else if (rest.startsWith("::")) out += "<span class=\"tok-def\">" + escapeHtml(word) + "</span>";
-        else out += "<span class=\"tok-ident\">" + escapeHtml(word) + "</span>";
-      }
-    } else if (ws) out += ws;
-    else if (other) out += escapeHtml(other);
-  }
-  return out;
-}
-
-function highlightShell(code) {
-  const shellPattern = [
-    "#[^\\r\\n]*",
-    "\"(?:\\\\.|[^\"\\\\])*\"|\\x27(?:\\\\.|[^\\x27\\\\])*\\x27",
-    "-[a-zA-Z0-9_\\-]+",
-    "\\b(?:gcc|clang|cc|make|git|curl|echo|cat|cd|ls|mkdir|rm)\\b|\\./abyss\\b",
-    "\\s+",
-    "."
-  ].map(p => "(" + p + ")").join("|");
-
-  const shellRegex = new RegExp(shellPattern, "g");
-  let out = "";
-  let m;
-  while ((m = shellRegex.exec(code)) !== null) {
-    const [full, comment, str, flag, cmd, ws, other] = m;
-    if (comment) out += "<span class=\"tok-comment\">" + escapeHtml(comment) + "</span>";
-    else if (str) out += "<span class=\"tok-str\">" + escapeHtml(str) + "</span>";
-    else if (flag) out += "<span class=\"tok-flag\">" + escapeHtml(flag) + "</span>";
-    else if (cmd) out += "<span class=\"tok-fn\">" + escapeHtml(cmd) + "</span>";
-    else if (ws) out += ws;
-    else if (other) out += escapeHtml(other);
-  }
-  return out;
-}
 
 function renderFallbackMarkdown(md) {
   const lines = md.split('\n');
