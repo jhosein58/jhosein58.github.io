@@ -46,6 +46,13 @@
   align-items: center;
   justify-content: space-between;
   padding: 0 1.5rem;
+  transition: opacity 0.35s ease, transform 0.35s ease;
+}
+
+.topbar.hidden {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-8px);
 }
 
 .topbar-brand {
@@ -124,7 +131,7 @@ body {
 
 .depth-track-system {
   position: fixed;
-  right: 1.25rem;
+  right: 1.75rem;
   top: calc(48px + 7vh);
   z-index: 998;
   pointer-events: none;
@@ -150,11 +157,34 @@ body {
   border-radius: 2px;
 }
 
-.depth-dots-lane {
+.depth-endpoint {
+  position: relative;
   display: flex;
-  flex-direction: column;
   align-items: center;
+  justify-content: center;
   margin-top: 24px;
+  pointer-events: auto;
+  cursor: pointer;
+  padding: 4px;
+}
+
+.depth-descend-label {
+  position: absolute;
+  right: calc(100% + 8px);
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #444444;
+  white-space: nowrap;
+  user-select: none;
+  pointer-events: auto;
+  transition: color 0.15s ease, opacity 0.25s ease;
+}
+
+.depth-endpoint:hover .depth-descend-label {
+  color: #a1a1aa;
 }
 
 .depth-dot {
@@ -165,50 +195,25 @@ body {
   transition: all 0.3s ease;
 }
 
+.depth-endpoint:hover .depth-dot {
+  background: rgba(255, 255, 255, 0.5);
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.5);
+}
+
 .depth-dot.lit {
   background: #ffffff;
   box-shadow: 0 0 8px #ffffff, 0 0 18px rgba(255, 255, 255, 0.85);
   transform: scale(1.6);
 }
 
-.descend-btn {
-  margin-top: 16px;
-  pointer-events: auto;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  background: rgba(0, 0, 0, 0.75);
-  border: 1px solid #222222;
-  border-radius: 4px;
-  padding: 4px 7px;
-  font-family: var(--font-mono);
-  font-size: 0.6rem;
-  font-weight: 500;
-  letter-spacing: 0.12em;
-  color: #71717a;
-  cursor: pointer;
-  touch-action: manipulation;
-  -webkit-tap-highlight-color: transparent;
-  transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease, transform 0.15s ease;
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-}
-
-.descend-btn:hover {
-  color: #ffffff;
-  border-color: #555555;
-  background: rgba(18, 18, 18, 0.95);
-  transform: translateY(1px);
-}
-
 .depth-tracker {
   position: fixed;
-  right: 1.65rem;
+  right: calc(1.75rem + 8px);
   top: 0;
   z-index: 1000;
   display: flex;
   align-items: center;
-  gap: 0.65rem;
+  gap: 10px;
   pointer-events: none;
   font-family: var(--font-mono);
   will-change: transform;
@@ -220,6 +225,7 @@ body {
   align-items: flex-end;
   text-shadow: 0 2px 10px rgba(0, 0, 0, 0.95);
   text-align: right;
+  line-height: 1;
 }
 
 .depth-meters {
@@ -241,30 +247,17 @@ body {
   letter-spacing: 0.12em;
   color: #555555;
   text-transform: uppercase;
-  margin-top: 0.15rem;
+  margin-top: 0.18rem;
   transition: color 0.2s ease;
 }
 
-.depth-arrow-wrap {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #ffffff;
-  filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.7));
-  height: 10px;
-  width: 10px;
-}
-
-.depth-arrow {
-  width: 10px;
-  height: 10px;
-  display: block;
-  animation: arrow-point 1.2s infinite ease-in-out;
-}
-
-@keyframes arrow-point {
-  0%, 100% { transform: translateX(0); }
-  50% { transform: translateX(3px); }
+.depth-dash {
+  width: 12px;
+  height: 2px;
+  background: #ffffff;
+  border-radius: 1px;
+  flex-shrink: 0;
+  box-shadow: 0 0 4px rgba(255, 255, 255, 0.4);
 }
 
 .container {
@@ -480,17 +473,7 @@ body {
 .the-void {
   min-height: 35vh;
   position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   background: #000000;
-}
-
-.void-pulse {
-  width: 1px;
-  height: 80px;
-  background: linear-gradient(to bottom, transparent, rgba(255, 255, 255, 0.2), transparent);
-  animation: pulse-down 2.2s infinite ease-in-out;
 }
 
 .revelation-track {
@@ -624,29 +607,32 @@ body {
     padding: 4.5rem 0;
   }
   .depth-track-system {
-    right: 0.85rem;
+    right: 1.25rem;
     top: calc(46px + 8vh);
   }
   .depth-rail {
     height: 48vh;
     height: 48dvh;
   }
-  .depth-dots-lane {
-    margin-top: 14px;
+  .depth-endpoint {
+    margin-top: 18px;
   }
-  .descend-btn {
-    margin-top: 12px;
+  .depth-descend-label {
+    font-size: 0.55rem;
   }
   .depth-tracker {
-    right: 1.2rem;
+    right: calc(1.25rem + 7px);
     top: 0;
-    gap: 0.45rem;
+    gap: 7px;
   }
   .depth-meters {
     font-size: 0.92rem;
   }
   .depth-zone {
     font-size: 0.52rem;
+  }
+  .depth-dash {
+    width: 9px;
   }
   .code-content {
     padding: 1.15rem 4rem 1.15rem 1.15rem;
@@ -782,7 +768,7 @@ body {
 </head>
 <body>
 
-<header class="topbar">
+<header class="topbar" id="topbar">
   <a href="/abyss" class="topbar-brand" aria-label="Abyss Home">
     <svg viewBox="240 280 2860 690" class="topbar-logo-svg" aria-hidden="true">
       <g fill="#ffffff" fill-rule="evenodd">
@@ -820,15 +806,10 @@ body {
   <div class="depth-rail">
     <div class="depth-rail-fill" id="depth-bar"></div>
   </div>
-  <div class="depth-dots-lane">
+  <div class="depth-endpoint" id="depth-endpoint" title="Descend to ABYSS" aria-label="Descend to ABYSS">
+    <span class="depth-descend-label" id="descend-label">descend</span>
     <div class="depth-dot" id="depth-dot"></div>
   </div>
-  <button class="descend-btn" id="descend-btn" title="Descend to ABYSS" aria-label="Descend to ABYSS">
-    <span>DESCEND</span>
-    <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-      <path d="M12 5v14M19 12l-7 7-7-7"/>
-    </svg>
-  </button>
 </div>
 
 <div class="depth-tracker" id="depth-tracker">
@@ -836,11 +817,7 @@ body {
     <div class="depth-meters" id="depth-display">0m</div>
     <div class="depth-zone" id="zone-display">SUNLIGHT ZONE</div>
   </div>
-  <div class="depth-arrow-wrap">
-    <svg class="depth-arrow" width="10" height="10" viewBox="0 0 10 10" fill="currentColor">
-      <polygon points="1,1 9,5 1,9"/>
-    </svg>
-  </div>
+  <div class="depth-dash" aria-hidden="true"></div>
 </div>
 
 <section class="stage-section" id="stage-0" data-depth="0" data-zone="SUNLIGHT ZONE">
@@ -1066,9 +1043,7 @@ main :: fn() {
   </div>
 </section>
 
-<div class="the-void" id="stage-void" data-depth="-11000" data-zone="CHALLENGER DEEP">
-  <div class="void-pulse"></div>
-</div>
+<div class="the-void" id="stage-void" data-depth="-11000" data-zone="CHALLENGER DEEP"></div>
 
 <div class="revelation-track" id="stage-revelation-track">
   <section class="revelation" id="stage-revelation" data-depth="-Infinity" data-zone="THE ABYSS">
@@ -1092,10 +1067,6 @@ main :: fn() {
     <div class="bottom-nav" id="bottom-nav">
       <a href="#stage-0">0m</a>
       <span>&bull;</span>
-      <a href="/abyss/docs/">docs</a>
-      <span>&bull;</span>
-      <a href="/abyss/playground/">playground</a>
-      <span>&bull;</span>
       <a href="/">root</a>
       <span>&bull;</span>
       <a href="https://github.com/jhosein58/abyss/blob/main/LICENSE" target="_blank" rel="noopener noreferrer">mit</a>
@@ -1110,6 +1081,9 @@ const depthBar = document.getElementById('depth-bar');
 const depthTracker = document.getElementById('depth-tracker');
 const depthDot = document.getElementById('depth-dot');
 const depthRail = document.querySelector('.depth-rail');
+const topbar = document.getElementById('topbar');
+const descendLabel = document.getElementById('descend-label');
+const depthEndpoint = document.getElementById('depth-endpoint');
 
 const stage0 = document.getElementById('stage-0');
 const stage200 = document.getElementById('stage-200');
@@ -1144,12 +1118,21 @@ function getZoneName(depth) {
 }
 
 function updateHUD() {
-  if (!depthRail || depthRail.offsetWidth === 0) return;
-
   const scrollTop = window.scrollY || document.documentElement.scrollTop;
   const maxScroll = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
   const s0Top = stage0 ? stage0.offsetTop : 0;
   const sVoidTop = stageVoid ? stageVoid.offsetTop : 3000;
+
+  if (topbar) {
+    const isAtEnd = scrollTop >= (stageRevTrack ? stageRevTrack.offsetTop - 80 : maxScroll - 300);
+    if (isAtEnd) {
+      topbar.classList.add('hidden');
+    } else {
+      topbar.classList.remove('hidden');
+    }
+  }
+
+  if (!depthRail || depthRail.offsetWidth === 0) return;
 
   const railRect = depthRail.getBoundingClientRect();
   const dotRect = depthDot.getBoundingClientRect();
@@ -1188,10 +1171,25 @@ function updateHUD() {
     depthDisplay.classList.remove('infinite-mode');
     zoneDisplay.textContent = getZoneName(currentDepth);
     zoneDisplay.style.color = '#737373';
+
+    if (descendLabel) {
+      if (scrollTop >= sVoidTop - 250) {
+        descendLabel.style.opacity = '0';
+        descendLabel.style.pointerEvents = 'none';
+      } else {
+        descendLabel.style.opacity = '1';
+        descendLabel.style.pointerEvents = 'auto';
+      }
+    }
   } else {
     const voidRatio = maxScroll > sVoidTop ? Math.min(Math.max((scrollTop - sVoidTop) / (maxScroll - sVoidTop), 0), 1) : 1;
     depthBar.style.height = (railBottom - railTop) + 'px';
     targetY = railBottom + voidRatio * (dotCenter - railBottom);
+
+    if (descendLabel) {
+      descendLabel.style.opacity = '0';
+      descendLabel.style.pointerEvents = 'none';
+    }
 
     if (voidRatio >= 0.35) {
       depthDot.classList.add('lit');
@@ -1212,9 +1210,8 @@ function updateHUD() {
   depthTracker.style.transform = 'translateY(' + trackerY + 'px)';
 }
 
-const descendBtn = document.getElementById('descend-btn');
-if (descendBtn) {
-  descendBtn.addEventListener('click', () => {
+if (depthEndpoint) {
+  depthEndpoint.addEventListener('click', () => {
     window.scrollTo({
       top: document.documentElement.scrollHeight,
       behavior: 'smooth'
