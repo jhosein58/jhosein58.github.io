@@ -1,93 +1,10 @@
-const EXAMPLES = {
-    hello: `import print_cstr from "std/prelude"
+const INITIAL_CODE = `import print_cstr from "std/prelude"
 
 main :: fn() {
     print_cstr(c"Welcome to the Abyss Playground!\\n")
     print_cstr(c"Compiled and executed entirely inside WebAssembly.\\n")
 }
-`,
-    fibonacci: `import print_cstr, print_i32 from "std/prelude"
-
-fib :: fn(n i32) i32 {
-    if n <= 1 { ret n }
-    fib(n - 1) + fib(n - 2)
-}
-
-main :: fn() {
-    print_cstr(c"Calculating Fibonacci numbers:\\n")
-    i := 0
-    while i <= 10 {
-        print_cstr(c"fib(")
-        print_i32(i)
-        print_cstr(c") = ")
-        print_i32(fib(i))
-        print_cstr(c"\\n")
-        i = i + 1
-    }
-}
-`,
-    structs: `import print_cstr, print_i32 from "std/prelude"
-
-Point :: struct {
-    x i32
-    y i32
-
-    new :: fn(x i32, y i32) Self {
-        .{ x: x, y: y }
-    }
-
-    sum :: fn(self &Self) i32 {
-        self.x + self.y
-    }
-}
-
-main :: fn() {
-    p := Point.new(15, 27)
-    print_cstr(c"Point coords: (")
-    print_i32(p.x)
-    print_cstr(c", ")
-    print_i32(p.y)
-    print_cstr(c")\\n")
-    print_cstr(c"Point sum: ")
-    print_i32(p.sum())
-    print_cstr(c"\\n")
-}
-`,
-    strings: `import print_cstr, print_i32, print_char from "std/prelude"
-import Str from "std/string"
-
-main :: fn() {
-    msg := Str.of("Abyss Language")
-    print_cstr(c"Message: ")
-    print_cstr(msg.ptr)
-    print_cstr(c"\\nLength: ")
-    print_i32(msg.len as i32)
-    print_cstr(c"\\nCharacters: ")
-    i: u64 = 0
-    while i < msg.len {
-        c := *(msg.ptr + i)
-        print_char(c)
-        print_char(32 as u8)
-        i = i + 1
-    }
-    print_cstr(c"\\n")
-}
-`,
-    comptime: `import print_cstr, print_i32 from "std/prelude"
-import Str from "std/string"
-
-gen_code :: fn() Str {
-    Str.of("6 * 7")
-}
-
-main :: fn() {
-    val := #gen_code()
-    print_cstr(c"Macro code splice result = ")
-    print_i32(val)
-    print_cstr(c"\\n")
-}
-`
-};
+`;
 
 let wasmModule = null;
 const editor = document.getElementById("code-editor");
@@ -96,8 +13,6 @@ const output = document.getElementById("output");
 const runBtn = document.getElementById("run-btn");
 const clearBtn = document.getElementById("clear-btn");
 const copyBtn = document.getElementById("copy-btn");
-const resetBtn = document.getElementById("reset-btn");
-const exampleSelect = document.getElementById("example-select");
 const statusPill = document.getElementById("status-pill");
 const statusText = document.getElementById("status-text");
 const execTime = document.getElementById("exec-time");
@@ -196,7 +111,7 @@ function parseAnsi(text) {
 
 async function loadWasm() {
     try {
-        setStatus("loading", "Compiling Wasm...");
+        setStatus("loading", "Loading Wasm");
         runBtn.disabled = true;
 
         const response = await fetch("abyssc.wasm");
@@ -207,7 +122,7 @@ async function loadWasm() {
         const buffer = await response.arrayBuffer();
         wasmModule = await WebAssembly.compile(buffer);
 
-        setStatus("ready", "Wasm Ready");
+        setStatus("ready", "Ready");
         runBtn.disabled = false;
     } catch (err) {
         setStatus("error", "Wasm Error");
@@ -218,7 +133,7 @@ async function loadWasm() {
 async function runCode() {
     if (!wasmModule) return;
 
-    setStatus("running", "Executing...");
+    setStatus("running", "Running");
     runBtn.disabled = true;
     execTime.style.display = "none";
 
@@ -266,9 +181,9 @@ async function runCode() {
         execTime.style.display = "inline-block";
 
         if (exitCode === 0) {
-            setStatus("ready", "Wasm Ready");
+            setStatus("ready", "Ready");
         } else {
-            setStatus("error", "Process Exited");
+            setStatus("error", "Exit " + exitCode);
         }
     } catch (err) {
         output.innerHTML = `<span class="ansi-red">Execution error: ${escapeHtml(err.message)}</span>`;
@@ -302,24 +217,6 @@ editor.addEventListener("keydown", (e) => {
     }
 });
 
-exampleSelect.addEventListener("change", (e) => {
-    const val = e.target.value;
-    if (EXAMPLES[val]) {
-        editor.value = EXAMPLES[val];
-        updateLineNumbers();
-        updateEditorHighlight();
-    }
-});
-
-resetBtn.addEventListener("click", () => {
-    const val = exampleSelect.value;
-    if (EXAMPLES[val]) {
-        editor.value = EXAMPLES[val];
-        updateLineNumbers();
-        updateEditorHighlight();
-    }
-});
-
 copyBtn.addEventListener("click", () => {
     navigator.clipboard.writeText(editor.value).then(() => {
         const originalTitle = copyBtn.getAttribute("title");
@@ -335,7 +232,7 @@ clearBtn.addEventListener("click", () => {
 
 runBtn.addEventListener("click", runCode);
 
-editor.value = EXAMPLES.hello;
+editor.value = INITIAL_CODE;
 updateLineNumbers();
 updateEditorHighlight();
 loadWasm();
