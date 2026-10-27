@@ -22,11 +22,75 @@
   --font-mono: "JetBrains Mono", monospace;
 }
 
-* {
+*,
+*::before,
+*::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
   -webkit-tap-highlight-color: transparent;
+}
+
+.topbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 48px;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border-line);
+  z-index: 1001;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 1.5rem;
+}
+
+.topbar-brand {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+  opacity: 0.92;
+  transition: opacity 0.15s ease;
+}
+
+.topbar-brand:hover {
+  opacity: 1;
+}
+
+.topbar-logo-svg {
+  height: 20px;
+  width: auto;
+  display: block;
+}
+
+.topbar-nav {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+}
+
+.topbar-link {
+  color: #888888;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  transition: color 0.15s ease;
+}
+
+.topbar-link:hover {
+  color: #ffffff;
+}
+
+.topbar-github-icon {
+  width: 14px;
+  height: 14px;
+  fill: currentColor;
 }
 
 html {
@@ -61,7 +125,7 @@ body {
 .depth-track-system {
   position: fixed;
   right: 1.25rem;
-  top: 14vh;
+  top: calc(48px + 7vh);
   z-index: 998;
   pointer-events: none;
   display: flex;
@@ -107,6 +171,36 @@ body {
   transform: scale(1.6);
 }
 
+.descend-btn {
+  margin-top: 16px;
+  pointer-events: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(0, 0, 0, 0.75);
+  border: 1px solid #222222;
+  border-radius: 4px;
+  padding: 4px 7px;
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  color: #71717a;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease, transform 0.15s ease;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.descend-btn:hover {
+  color: #ffffff;
+  border-color: #555555;
+  background: rgba(18, 18, 18, 0.95);
+  transform: translateY(1px);
+}
+
 .depth-tracker {
   position: fixed;
   right: 1.65rem;
@@ -138,18 +232,8 @@ body {
 }
 
 .depth-meters.infinite-mode {
-  transform: scale(1.18);
-  text-shadow: 0 0 10px rgba(255, 255, 255, 0.95), 0 0 22px rgba(255, 255, 255, 0.75);
-}
-
-@keyframes morph-infinity {
-  0% { transform: scale(0.85); opacity: 0.4; filter: blur(2px); }
-  50% { transform: scale(1.3); opacity: 1; filter: blur(0px); }
-  100% { transform: scale(1.18); opacity: 1; filter: blur(0px); }
-}
-
-.depth-meters.infinite-transition {
-  animation: morph-infinity 0.45s ease-out forwards;
+  transform: scale(1.08);
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.9);
 }
 
 .depth-zone {
@@ -394,7 +478,7 @@ body {
 }
 
 .the-void {
-  min-height: 110vh;
+  min-height: 35vh;
   position: relative;
   display: flex;
   align-items: center;
@@ -404,13 +488,13 @@ body {
 
 .void-pulse {
   width: 1px;
-  height: 120px;
+  height: 80px;
   background: linear-gradient(to bottom, transparent, rgba(255, 255, 255, 0.2), transparent);
   animation: pulse-down 2.2s infinite ease-in-out;
 }
 
 .revelation-track {
-  height: 220vh;
+  height: 125vh;
   position: relative;
   background: #000000;
 }
@@ -541,15 +625,17 @@ body {
   }
   .depth-track-system {
     right: 0.85rem;
-    top: 16vh;
-    top: 16dvh;
+    top: calc(46px + 8vh);
   }
   .depth-rail {
     height: 48vh;
     height: 48dvh;
   }
   .depth-dots-lane {
-    margin-top: 18px;
+    margin-top: 14px;
+  }
+  .descend-btn {
+    margin-top: 12px;
   }
   .depth-tracker {
     right: 1.2rem;
@@ -562,18 +648,15 @@ body {
   .depth-zone {
     font-size: 0.52rem;
   }
-  .code-bar {
-    padding: 0.65rem 1rem;
-  }
   .code-content {
-    padding: 1.15rem 1rem;
+    padding: 1.15rem 4rem 1.15rem 1.15rem;
     font-size: 0.8rem;
   }
   .the-void {
-    min-height: 90vh;
+    min-height: 30vh;
   }
   .revelation-track {
-    height: 190vh;
+    height: 120vh;
   }
   .abyss-main-title {
     font-size: clamp(3.75rem, 13vw, 7rem);
@@ -589,9 +672,24 @@ body {
 }
 
 @media (max-width: 480px) {
+  .topbar {
+    padding: 0 1rem;
+    height: 44px;
+  }
+  .topbar-logo-svg {
+    height: 16px;
+  }
+  .topbar-nav {
+    gap: 0.75rem;
+    font-size: 0.72rem;
+  }
+  .depth-track-system,
+  .depth-tracker {
+    display: none !important;
+  }
   .container {
     padding: 0 1rem;
-    padding-right: 4.5rem;
+    padding-right: 1rem;
   }
   .stage-section {
     padding: 3.5rem 0;
@@ -605,37 +703,6 @@ body {
     line-height: 1.6;
     margin-bottom: 1.75rem;
   }
-  .depth-track-system {
-    right: 0.65rem;
-    top: 18vh;
-    top: 18dvh;
-  }
-  .depth-rail {
-    height: 44vh;
-    height: 44dvh;
-  }
-  .depth-dots-lane {
-    margin-top: 16px;
-  }
-  .depth-tracker {
-    right: 0.95rem;
-    top: 0;
-    gap: 0.35rem;
-  }
-  .depth-data {
-    background: rgba(0, 0, 0, 0.5);
-    backdrop-filter: blur(6px);
-    -webkit-backdrop-filter: blur(6px);
-    padding: 3px 6px;
-    border-radius: 4px;
-  }
-  .depth-meters {
-    font-size: 0.82rem;
-  }
-  .depth-zone {
-    font-size: 0.46rem;
-    letter-spacing: 0.08em;
-  }
   .spec-pills {
     gap: 0.4rem;
     margin-bottom: 1.75rem;
@@ -644,19 +711,9 @@ body {
     padding: 0.3rem 0.6rem;
     font-size: 0.68rem;
   }
-  .code-bar {
-    padding: 0.55rem 0.85rem;
-  }
-  .code-name {
-    font-size: 0.72rem;
-  }
-  .code-copy {
-    font-size: 0.72rem;
-    padding: 4px 6px;
-  }
   .code-content {
-    padding: 0.85rem 0.75rem;
-    font-size: 0.75rem;
+    padding: 1rem 3.5rem 1rem 1rem;
+    font-size: 0.78rem;
     line-height: 1.6;
   }
   .scroll-prompt {
@@ -664,10 +721,10 @@ body {
     font-size: 0.68rem;
   }
   .the-void {
-    min-height: 75vh;
+    min-height: 25vh;
   }
   .revelation-track {
-    height: 175vh;
+    height: 115vh;
   }
   .abyss-main-title {
     font-size: clamp(2.75rem, 15vw, 4.25rem);
@@ -687,26 +744,17 @@ body {
   }
 }
 
-@media (max-width: 360px) {
+@media (max-width: 400px) {
   .container {
     padding: 0 0.75rem;
-    padding-right: 4.2rem;
+    padding-right: 0.75rem;
   }
-  .depth-tracker {
-    right: 0.85rem;
-    gap: 0.25rem;
-  }
-  .depth-meters {
-    font-size: 0.76rem;
-  }
-  .depth-zone {
-    font-size: 0.42rem;
+  .code-content {
+    padding: 0.9rem 3.2rem 0.9rem 0.85rem;
+    font-size: 0.74rem;
   }
   .stage-title {
     font-size: 1.4rem;
-  }
-  .code-content {
-    font-size: 0.7rem;
   }
   .abyss-main-title {
     font-size: 2.5rem;
@@ -734,6 +782,31 @@ body {
 </head>
 <body>
 
+<header class="topbar">
+  <a href="/abyss" class="topbar-brand" aria-label="Abyss Home">
+    <svg viewBox="240 280 2860 690" class="topbar-logo-svg" aria-hidden="true">
+      <g fill="#ffffff" fill-rule="evenodd">
+        <polygon points="564.2,313.5 692.1,313.5 975.0,939.5 854.0,939.5 627.9,436.3 392.2,939.5 270.6,939.5" />
+        <circle cx="626.3" cy="705.1" r="67.5" />
+        <path d="M 1065,313.5 H 1305 A 182.5,182.5 0 0,1 1432.6,626.5 A 182.5,182.5 0 0,1 1305,939.5 H 1065 Z M 1175,417.5 H 1305 A 78.5,78.5 0 0,1 1305,574.5 H 1175 Z M 1175,678.5 H 1305 A 78.5,78.5 0 0,1 1305,835.5 H 1175 Z" />
+        <polygon points="1540,313.5 1664,313.5 1795,568.0 1926,313.5 2050,313.5 1850,678.0 1850,939.5 1740,939.5 1740,678.0" />
+        <path d="M 2495,313.5 H 2292.5 A 182.5,182.5 0 0,0 2292.5,678.5 H 2352.5 A 78.5,78.5 0 0,1 2352.5,835.5 H 2140 V 939.5 H 2352.5 A 182.5,182.5 0 0,0 2352.5,574.5 H 2292.5 A 78.5,78.5 0 0,1 2292.5,417.5 H 2495 Z" />
+        <path d="M 3020,313.5 H 2817.5 A 182.5,182.5 0 0,0 2817.5,678.5 H 2877.5 A 78.5,78.5 0 0,1 2877.5,835.5 H 2665 V 939.5 H 2877.5 A 182.5,182.5 0 0,0 2877.5,574.5 H 2817.5 A 78.5,78.5 0 0,1 2817.5,417.5 H 3020 Z" />
+      </g>
+    </svg>
+  </a>
+  <nav class="topbar-nav">
+    <a href="/abyss/docs/" class="topbar-link">Docs</a>
+    <a href="/abyss/playground/" class="topbar-link">Playground</a>
+    <a href="https://github.com/jhosein58/abyss" target="_blank" rel="noopener noreferrer" class="topbar-link" aria-label="GitHub Repository">
+      <svg class="topbar-github-icon" viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
+        <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
+      </svg>
+      <span>GitHub</span>
+    </a>
+  </nav>
+</header>
+
 <svg class="svg-defs" aria-hidden="true">
   <defs>
     <filter id="abyss-current-filter" x="-25%" y="-40%" width="150%" height="180%" color-interpolation-filters="sRGB">
@@ -750,6 +823,12 @@ body {
   <div class="depth-dots-lane">
     <div class="depth-dot" id="depth-dot"></div>
   </div>
+  <button class="descend-btn" id="descend-btn" title="Descend to ABYSS" aria-label="Descend to ABYSS">
+    <span>DESCEND</span>
+    <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+      <path d="M12 5v14M19 12l-7 7-7-7"/>
+    </svg>
+  </button>
 </div>
 
 <div class="depth-tracker" id="depth-tracker">
@@ -1064,9 +1143,9 @@ function getZoneName(depth) {
   return 'CHALLENGER DEEP';
 }
 
-let wasInfinite = false;
-
 function updateHUD() {
+  if (!depthRail || depthRail.offsetWidth === 0) return;
+
   const scrollTop = window.scrollY || document.documentElement.scrollTop;
   const maxScroll = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
   const s0Top = stage0 ? stage0.offsetTop : 0;
@@ -1106,47 +1185,41 @@ function updateHUD() {
     }
 
     depthDisplay.textContent = currentDepth.toLocaleString() + 'm';
-    depthDisplay.classList.remove('infinite-mode', 'infinite-transition');
+    depthDisplay.classList.remove('infinite-mode');
     zoneDisplay.textContent = getZoneName(currentDepth);
     zoneDisplay.style.color = '#737373';
-    wasInfinite = false;
   } else {
     const voidRatio = maxScroll > sVoidTop ? Math.min(Math.max((scrollTop - sVoidTop) / (maxScroll - sVoidTop), 0), 1) : 1;
     depthBar.style.height = (railBottom - railTop) + 'px';
     targetY = railBottom + voidRatio * (dotCenter - railBottom);
 
-    if (voidRatio >= 0.96) {
+    if (voidRatio >= 0.35) {
       depthDot.classList.add('lit');
-    } else {
-      depthDot.classList.remove('lit');
-    }
-
-    zoneDisplay.textContent = 'THE ABYSS';
-    zoneDisplay.style.color = '#a3a3a3';
-
-    if (voidRatio < 0.94) {
-      wasInfinite = false;
-      depthDisplay.classList.remove('infinite-mode', 'infinite-transition');
-      const surgeRatio = voidRatio / 0.94;
-      const exponent = Math.pow(surgeRatio, 4.2);
-      const acceleratedDepth = Math.round(11000 + exponent * 98000000000);
-      const jitter = Math.floor(Math.random() * (exponent * 8000000 + 49));
-      const val = acceleratedDepth + jitter;
-      depthDisplay.textContent = '-' + val.toLocaleString() + 'm';
-    } else {
-      if (!wasInfinite) {
-        wasInfinite = true;
-        depthDisplay.classList.remove('infinite-transition');
-        void depthDisplay.offsetWidth;
-        depthDisplay.classList.add('infinite-transition');
-      }
       depthDisplay.classList.add('infinite-mode');
       depthDisplay.textContent = '-∞';
+      zoneDisplay.textContent = 'THE ABYSS';
+      zoneDisplay.style.color = '#ffffff';
+    } else {
+      depthDot.classList.remove('lit');
+      depthDisplay.classList.remove('infinite-mode');
+      depthDisplay.textContent = '-11,000m';
+      zoneDisplay.textContent = 'CHALLENGER DEEP';
+      zoneDisplay.style.color = '#a3a3a3';
     }
   }
 
   const trackerY = targetY - (trackerHeight / 2);
   depthTracker.style.transform = 'translateY(' + trackerY + 'px)';
+}
+
+const descendBtn = document.getElementById('descend-btn');
+if (descendBtn) {
+  descendBtn.addEventListener('click', () => {
+    window.scrollTo({
+      top: document.documentElement.scrollHeight,
+      behavior: 'smooth'
+    });
+  });
 }
 
 let smoothP = 0;
