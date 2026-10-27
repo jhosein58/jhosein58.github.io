@@ -132,143 +132,126 @@ body {
 .depth-track-system {
   position: fixed;
   right: 1.75rem;
-  top: calc(48px + 7vh);
+  top: calc(48px + 5.5vh);
   z-index: 998;
   pointer-events: none;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: flex-end;
+  user-select: none;
 }
 
 .depth-gauge-wrap {
   position: relative;
-  height: 52vh;
-  width: 2px;
+  height: 66vh;
+  width: 28px;
+  display: flex;
+  justify-content: flex-end;
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 5%, #000 95%, transparent 100%);
+  mask-image: linear-gradient(to bottom, transparent 0%, #000 5%, #000 95%, transparent 100%);
 }
 
 .depth-rail {
-  width: 2px;
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 1px;
   height: 100%;
-  background: rgba(255, 255, 255, 0.08);
-  border-radius: 2px;
-  overflow: hidden;
-  position: relative;
+  background: rgba(255, 255, 255, 0.05);
 }
 
 .depth-rail-fill {
   width: 100%;
   height: 0%;
-  background: #ffffff;
-  box-shadow: 0 0 6px rgba(255, 255, 255, 0.7);
-  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.24);
+  will-change: height;
 }
 
 .depth-ticks {
   position: absolute;
-  left: 6px;
+  right: 1px;
   top: 0;
-  width: 12px;
+  width: 24px;
   height: 100%;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
   pointer-events: none;
 }
 
-.depth-tick {
-  width: 4px;
+.depth-tick-row {
+  position: absolute;
+  right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
   height: 1px;
-  background: rgba(255, 255, 255, 0.14);
-  transform-origin: left center;
-  transition: background-color 0.12s ease, transform 0.15s ease, box-shadow 0.15s ease, width 0.15s ease;
+  transform-origin: right center;
+  will-change: transform, opacity;
 }
 
-.depth-tick.major {
-  width: 8px;
-  height: 1.5px;
-  background: rgba(255, 255, 255, 0.25);
-}
-
-.depth-tick.passed {
-  background: rgba(255, 255, 255, 0.55);
-}
-
-.depth-tick.major.passed {
-  background: rgba(255, 255, 255, 0.85);
-  box-shadow: 0 0 3px rgba(255, 255, 255, 0.4);
-}
-
-.depth-tick.active {
+.depth-tick-line {
+  height: 1px;
   background: #ffffff;
-  width: 7px;
-  box-shadow: 0 0 6px rgba(255, 255, 255, 0.95);
-  transform: scaleY(1.4);
-}
-
-.depth-tick.major.active {
-  background: #ffffff;
-  width: 12px;
-  box-shadow: 0 0 8px #ffffff;
-  transform: scaleY(1.5);
+  transform-origin: right center;
+  will-change: width;
 }
 
 .depth-endpoint {
   position: relative;
   display: flex;
   align-items: center;
-  justify-content: center;
-  margin-top: 24px;
+  justify-content: flex-end;
+  margin-top: 16px;
+  margin-right: -5px;
   pointer-events: auto;
   cursor: pointer;
-  padding: 4px;
+  padding: 6px;
 }
 
 .depth-descend-label {
   position: absolute;
-  right: calc(100% + 8px);
+  right: calc(100% + 6px);
   font-family: var(--font-mono);
-  font-size: 0.62rem;
+  font-size: 0.56rem;
   font-weight: 500;
-  letter-spacing: 0.16em;
+  letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: #444444;
+  color: rgba(255, 255, 255, 0.18);
   white-space: nowrap;
   user-select: none;
   pointer-events: auto;
-  transition: color 0.15s ease, opacity 0.25s ease;
+  transition: color 0.2s ease, opacity 0.25s ease;
 }
 
 .depth-endpoint:hover .depth-descend-label {
-  color: #a1a1aa;
+  color: rgba(255, 255, 255, 0.65);
 }
 
 .depth-dot {
-  width: 6px;
-  height: 6px;
+  width: 4px;
+  height: 4px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.15);
-  transition: all 0.3s ease;
+  background: rgba(255, 255, 255, 0.16);
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.3s ease, box-shadow 0.3s ease;
 }
 
 .depth-endpoint:hover .depth-dot {
-  background: rgba(255, 255, 255, 0.5);
-  box-shadow: 0 0 8px rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.7);
+  transform: scale(1.2);
 }
 
 .depth-dot.lit {
   background: #ffffff;
-  box-shadow: 0 0 8px #ffffff, 0 0 18px rgba(255, 255, 255, 0.85);
-  transform: scale(1.6);
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.5);
+  transform: scale(1.35);
 }
 
 .depth-tracker {
   position: fixed;
-  right: calc(1.75rem + 8px);
+  right: calc(1.75rem + 16px);
   top: 0;
   z-index: 1000;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   pointer-events: none;
   font-family: var(--font-mono);
   will-change: transform;
@@ -278,48 +261,62 @@ body {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.95);
   text-align: right;
   line-height: 1;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.95);
+}
+
+.depth-readout-row {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.depth-pressure {
+  font-size: 0.52rem;
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.26);
+  letter-spacing: 0.06em;
+  font-variant-numeric: tabular-nums;
 }
 
 .depth-meters {
-  font-size: 1.15rem;
-  font-weight: 700;
-  color: #ffffff;
+  font-size: 0.94rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.88);
   letter-spacing: -0.02em;
-  line-height: 1.1;
-  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), text-shadow 0.25s ease, opacity 0.2s ease;
+  line-height: 1.05;
+  font-variant-numeric: tabular-nums;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), color 0.2s ease;
 }
 
 .depth-meters.infinite-mode {
-  transform: scale(1.08);
-  text-shadow: 0 0 10px rgba(255, 255, 255, 0.9);
+  color: #ffffff;
+  transform: scale(1.04);
 }
 
 .depth-zone {
-  font-size: 0.62rem;
-  letter-spacing: 0.12em;
-  color: #555555;
+  font-size: 0.52rem;
+  letter-spacing: 0.14em;
+  color: rgba(255, 255, 255, 0.28);
   text-transform: uppercase;
-  margin-top: 0.18rem;
+  margin-top: 0.2rem;
   transition: color 0.2s ease;
 }
 
-.depth-dash {
+.depth-reticle {
+  position: relative;
   width: 12px;
-  height: 2px;
-  background: #ffffff;
-  border-radius: 1px;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.75);
   flex-shrink: 0;
-  box-shadow: 0 0 4px rgba(255, 255, 255, 0.4);
 }
 
 .container {
   max-width: 980px;
   margin: 0 auto;
   padding: 0 2rem;
-  padding-right: 6.5rem;
+  padding-right: 7rem;
   width: 100%;
 }
 
@@ -649,7 +646,7 @@ body {
 @media (max-width: 1024px) {
   .container {
     padding: 0 2rem;
-    padding-right: 6rem;
+    padding-right: 6.5rem;
   }
 }
 
@@ -662,34 +659,33 @@ body {
     padding: 4.5rem 0;
   }
   .depth-track-system {
-    right: 1.25rem;
-    top: calc(46px + 8vh);
+    right: 1rem;
+    top: calc(46px + 6vh);
   }
   .depth-gauge-wrap {
-    height: 48vh;
-    height: 48dvh;
-  }
-  .depth-rail {
-    height: 100%;
+    height: 56vh;
+    height: 56dvh;
   }
   .depth-endpoint {
-    margin-top: 18px;
+    margin-top: 14px;
   }
   .depth-descend-label {
-    font-size: 0.55rem;
+    font-size: 0.5rem;
   }
   .depth-tracker {
-    right: calc(1.25rem + 7px);
-    top: 0;
-    gap: 7px;
+    right: calc(1rem + 14px);
+    gap: 6px;
   }
   .depth-meters {
-    font-size: 0.92rem;
+    font-size: 0.82rem;
+  }
+  .depth-pressure {
+    display: none;
   }
   .depth-zone {
-    font-size: 0.52rem;
+    font-size: 0.46rem;
   }
-  .depth-dash {
+  .depth-reticle {
     width: 9px;
   }
   .code-content {
@@ -812,11 +808,8 @@ body {
   .depth-track-system {
     top: 8vh;
   }
-  .depth-rail {
-    height: 38vh;
-  }
-  .depth-dots-lane {
-    margin-top: 10px;
+  .depth-gauge-wrap {
+    height: 44vh;
   }
   .bottom-nav {
     bottom: 0.75rem;
@@ -875,10 +868,13 @@ body {
 
 <div class="depth-tracker" id="depth-tracker">
   <div class="depth-data">
-    <div class="depth-meters" id="depth-display">0m</div>
+    <div class="depth-readout-row">
+      <span class="depth-pressure" id="pressure-display">1.0 ATM</span>
+      <span class="depth-meters" id="depth-display">0m</span>
+    </div>
     <div class="depth-zone" id="zone-display">SUNLIGHT ZONE</div>
   </div>
-  <div class="depth-dash" aria-hidden="true"></div>
+  <div class="depth-reticle" aria-hidden="true"></div>
 </div>
 
 <section class="stage-section" id="stage-0" data-depth="0" data-zone="SUNLIGHT ZONE">
@@ -1137,6 +1133,7 @@ main :: fn() {
 
 <script>
 const depthDisplay = document.getElementById('depth-display');
+const pressureDisplay = document.getElementById('pressure-display');
 const zoneDisplay = document.getElementById('zone-display');
 const depthBar = document.getElementById('depth-bar');
 const depthTracker = document.getElementById('depth-tracker');
@@ -1146,17 +1143,28 @@ const topbar = document.getElementById('topbar');
 const descendLabel = document.getElementById('descend-label');
 const depthEndpoint = document.getElementById('depth-endpoint');
 const depthTicksContainer = document.getElementById('depth-ticks');
-const tickCount = 31;
-const tickElements = [];
+
+const tickCount = 91;
+const tickItems = [];
 
 if (depthTicksContainer) {
   for (let i = 0; i < tickCount; i++) {
-    const tick = document.createElement('div');
-    const isMajor = i % 5 === 0;
-    tick.className = isMajor ? 'depth-tick major' : 'depth-tick';
-    tick.dataset.major = isMajor ? '1' : '0';
-    depthTicksContainer.appendChild(tick);
-    tickElements.push(tick);
+    const row = document.createElement('div');
+    row.className = 'depth-tick-row';
+    const u = i / (tickCount - 1);
+    row.style.top = (u * 100).toFixed(4) + '%';
+
+    const line = document.createElement('div');
+    line.className = 'depth-tick-line';
+    row.appendChild(line);
+
+    depthTicksContainer.appendChild(row);
+    tickItems.push({
+      row,
+      line,
+      u,
+      tier: i % 10 === 0 ? 2 : (i % 5 === 0 ? 1 : 0)
+    });
   }
 }
 
@@ -1192,7 +1200,13 @@ function getZoneName(depth) {
   return 'CHALLENGER DEEP';
 }
 
-function updateHUD() {
+let targetGaugeRatio = 0;
+let smoothGaugeRatio = 0;
+let targetDepthMeters = 0;
+let smoothDepthMeters = 0;
+let isInfiniteState = false;
+
+function syncScrollTargets() {
   const scrollTop = window.scrollY || document.documentElement.scrollTop;
   const maxScroll = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
   const s0Top = stage0 ? stage0.offsetTop : 0;
@@ -1207,24 +1221,10 @@ function updateHUD() {
     }
   }
 
-  if (!depthRail || depthRail.offsetWidth === 0) return;
-
-  const railRect = depthRail.getBoundingClientRect();
-  const dotRect = depthDot.getBoundingClientRect();
-  const trackerHeight = depthTracker.offsetHeight || 30;
-
-  const railTop = railRect.top;
-  const railBottom = railRect.bottom;
-  const dotCenter = dotRect.top + dotRect.height / 2;
-
-  let targetY = railTop;
-
   if (scrollTop <= sVoidTop) {
     const oceanRatio = sVoidTop > s0Top ? Math.min(Math.max((scrollTop - s0Top) / (sVoidTop - s0Top), 0), 1) : 0;
-    targetY = railTop + oceanRatio * (railBottom - railTop);
-    const fillHeight = Math.max(0, targetY - railTop);
-    depthBar.style.height = fillHeight + 'px';
-    depthDot.classList.remove('lit');
+    targetGaugeRatio = oceanRatio;
+    isInfiniteState = false;
 
     let currentDepth = 0;
     for (let i = 0; i < stages.length - 1; i++) {
@@ -1232,7 +1232,7 @@ function updateHUD() {
       const top2 = stages[i + 1].el.offsetTop;
       if (scrollTop >= top1 && scrollTop <= top2) {
         const segRatio = top2 > top1 ? (scrollTop - top1) / (top2 - top1) : 0;
-        currentDepth = Math.round(stages[i].depth + segRatio * (stages[i + 1].depth - stages[i].depth));
+        currentDepth = stages[i].depth + segRatio * (stages[i + 1].depth - stages[i].depth);
         break;
       } else if (scrollTop > top2 && i === stages.length - 2) {
         currentDepth = -11000;
@@ -1241,11 +1241,7 @@ function updateHUD() {
     if (scrollTop < stages[0].el.offsetTop) {
       currentDepth = 0;
     }
-
-    depthDisplay.textContent = currentDepth.toLocaleString() + 'm';
-    depthDisplay.classList.remove('infinite-mode');
-    zoneDisplay.textContent = getZoneName(currentDepth);
-    zoneDisplay.style.color = '#737373';
+    targetDepthMeters = currentDepth;
 
     if (descendLabel) {
       if (scrollTop >= sVoidTop - 250) {
@@ -1258,51 +1254,93 @@ function updateHUD() {
     }
   } else {
     const voidRatio = maxScroll > sVoidTop ? Math.min(Math.max((scrollTop - sVoidTop) / (maxScroll - sVoidTop), 0), 1) : 1;
-    depthBar.style.height = (railBottom - railTop) + 'px';
-    targetY = railBottom;
+    targetGaugeRatio = 1;
+    targetDepthMeters = -11000;
 
     if (descendLabel) {
       descendLabel.style.opacity = '0';
       descendLabel.style.pointerEvents = 'none';
     }
 
-    if (voidRatio >= 0.35) {
-      depthDot.classList.add('lit');
-      depthDisplay.classList.add('infinite-mode');
-      depthDisplay.textContent = '-∞';
-      zoneDisplay.textContent = 'THE ABYSS';
-      zoneDisplay.style.color = '#ffffff';
-    } else {
-      depthDot.classList.remove('lit');
-      depthDisplay.classList.remove('infinite-mode');
-      depthDisplay.textContent = '-11,000m';
-      zoneDisplay.textContent = 'CHALLENGER DEEP';
-      zoneDisplay.style.color = '#a3a3a3';
-    }
+    isInfiniteState = voidRatio >= 0.35;
+  }
+}
+
+function renderGaugeDrum() {
+  if (!depthRail || depthRail.offsetWidth === 0) return;
+
+  smoothGaugeRatio += (targetGaugeRatio - smoothGaugeRatio) * 0.16;
+  if (Math.abs(targetGaugeRatio - smoothGaugeRatio) < 0.0001) {
+    smoothGaugeRatio = targetGaugeRatio;
   }
 
-  targetY = Math.max(railTop, Math.min(targetY, railBottom));
-
-  const fillRatio = railBottom > railTop ? Math.max(0, Math.min(1, (targetY - railTop) / (railBottom - railTop))) : 0;
-  if (tickElements.length > 0) {
-    const activeIndex = Math.min(tickElements.length - 1, Math.round(fillRatio * (tickElements.length - 1)));
-    for (let i = 0; i < tickElements.length; i++) {
-      const tick = tickElements[i];
-      const isMaj = tick.dataset.major === '1';
-      if (fillRatio === 0) {
-        tick.className = isMaj ? 'depth-tick major' : 'depth-tick';
-      } else if (i < activeIndex) {
-        tick.className = isMaj ? 'depth-tick major passed' : 'depth-tick passed';
-      } else if (i === activeIndex) {
-        tick.className = isMaj ? 'depth-tick major active' : 'depth-tick active';
-      } else {
-        tick.className = isMaj ? 'depth-tick major' : 'depth-tick';
-      }
-    }
+  smoothDepthMeters += (targetDepthMeters - smoothDepthMeters) * 0.18;
+  if (Math.abs(targetDepthMeters - smoothDepthMeters) < 0.5) {
+    smoothDepthMeters = targetDepthMeters;
   }
 
-  const trackerY = targetY - (trackerHeight / 2);
-  depthTracker.style.transform = 'translateY(' + trackerY + 'px)';
+  const railRect = depthRail.getBoundingClientRect();
+  const trackerHeight = depthTracker.offsetHeight || 28;
+  const railTop = railRect.top;
+  const railHeight = railRect.height;
+
+  const activeY = railTop + smoothGaugeRatio * railHeight;
+  depthBar.style.height = (smoothGaugeRatio * 100).toFixed(2) + '%';
+
+  const roundedDepth = Math.round(smoothDepthMeters);
+  const atm = (1 + Math.abs(roundedDepth) * 0.1).toFixed(1);
+
+  if (isInfiniteState) {
+    depthDot.classList.add('lit');
+    depthDisplay.classList.add('infinite-mode');
+    depthDisplay.textContent = '-∞';
+    if (pressureDisplay) pressureDisplay.textContent = '∞ ATM';
+    zoneDisplay.textContent = 'THE ABYSS';
+    zoneDisplay.style.color = 'rgba(255, 255, 255, 0.75)';
+  } else {
+    depthDot.classList.remove('lit');
+    depthDisplay.classList.remove('infinite-mode');
+    depthDisplay.textContent = roundedDepth.toLocaleString() + 'm';
+    if (pressureDisplay) pressureDisplay.textContent = atm + ' ATM';
+    zoneDisplay.textContent = getZoneName(roundedDepth);
+    zoneDisplay.style.color = roundedDepth <= -10500 ? 'rgba(255, 255, 255, 0.45)' : 'rgba(255, 255, 255, 0.28)';
+  }
+
+  const sigma = 0.024;
+  const twoSigmaSq = 2 * sigma * sigma;
+
+  for (let i = 0; i < tickItems.length; i++) {
+    const item = tickItems[i];
+    const delta = item.u - smoothGaugeRatio;
+    const distSq = delta * delta;
+    const lens = Math.exp(-distSq / twoSigmaSq);
+
+    const drumAngle = (item.u - 0.5) * 0.78;
+    const drumCos = Math.max(0.45, Math.cos(drumAngle));
+
+    const spreadEnvelope = Math.exp(-distSq / 0.0045);
+    const yMagnify = (delta / sigma) * 1.15 * spreadEnvelope;
+    const xBulge = -lens * 0.9;
+
+    const baseWidth = item.tier === 2 ? 9 : (item.tier === 1 ? 6 : 3.5);
+    const magWidth = baseWidth + lens * (item.tier === 2 ? 2.5 : (item.tier === 1 ? 1.8 : 1.2));
+
+    const isPassed = item.u <= smoothGaugeRatio + 0.001;
+    const baseAlpha = item.tier === 2
+      ? (isPassed ? 0.30 : 0.17)
+      : (item.tier === 1 ? (isPassed ? 0.20 : 0.11) : (isPassed ? 0.13 : 0.065));
+
+    const finalAlpha = Math.min(0.92, (baseAlpha + lens * 0.62) * drumCos);
+
+    item.line.style.width = magWidth.toFixed(2) + 'px';
+    item.row.style.opacity = finalAlpha.toFixed(3);
+    item.row.style.transform = (lens > 0.01 || Math.abs(yMagnify) > 0.04)
+      ? 'translate3d(' + xBulge.toFixed(2) + 'px, ' + yMagnify.toFixed(2) + 'px, 0)'
+      : 'none';
+  }
+
+  const trackerY = activeY - (trackerHeight / 2);
+  depthTracker.style.transform = 'translate3d(0, ' + trackerY.toFixed(2) + 'px, 0)';
 }
 
 if (depthEndpoint) {
@@ -1325,7 +1363,9 @@ const charSeeds = [
   { threshold: 0.09, span: 0.84, freq1: 12.3, phase1: 3.3, freq2: 6.3, phase2: 1.9, driftX: -5, driftY: 18 }
 ];
 
-function renderEmergence() {
+function renderFrame() {
+  renderGaugeDrum();
+
   const scrollTop = window.scrollY || document.documentElement.scrollTop;
   const maxScroll = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
   const trackTop = stageRevTrack ? stageRevTrack.offsetTop - window.innerHeight * 0.25 : 3200;
@@ -1366,7 +1406,7 @@ function renderEmergence() {
         bottomNav.style.opacity = '1';
       }
     }
-    requestAnimationFrame(renderEmergence);
+    requestAnimationFrame(renderFrame);
     return;
   }
 
@@ -1383,7 +1423,7 @@ function renderEmergence() {
     if (subtitle) subtitle.style.opacity = '0';
     if (actions) actions.style.opacity = '0';
     if (bottomNav) bottomNav.style.opacity = '0';
-    requestAnimationFrame(renderEmergence);
+    requestAnimationFrame(renderFrame);
     return;
   }
 
@@ -1460,18 +1500,18 @@ function renderEmergence() {
     bottomNav.style.opacity = navP.toFixed(3);
   }
 
-  requestAnimationFrame(renderEmergence);
+  requestAnimationFrame(renderFrame);
 }
 
-window.addEventListener('scroll', updateHUD, { passive: true });
-window.addEventListener('resize', updateHUD);
-window.addEventListener('orientationchange', updateHUD);
+window.addEventListener('scroll', syncScrollTargets, { passive: true });
+window.addEventListener('resize', syncScrollTargets);
+window.addEventListener('orientationchange', syncScrollTargets);
 window.addEventListener('DOMContentLoaded', () => {
-  updateHUD();
-  requestAnimationFrame(renderEmergence);
+  syncScrollTargets();
+  requestAnimationFrame(renderFrame);
 });
-window.addEventListener('load', updateHUD);
-updateHUD();
+window.addEventListener('load', syncScrollTargets);
+syncScrollTargets();
 
 let landingWasmModule = null;
 
