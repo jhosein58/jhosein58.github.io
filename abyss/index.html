@@ -242,56 +242,117 @@ body {
 }
 
 .code-box {
-  background: #030303;
+  background: #000000;
   border: 1px solid #141414;
-  border-radius: 8px;
+  border-radius: 14px;
   overflow: hidden;
-  box-shadow: 0 16px 32px rgba(0, 0, 0, 0.85);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.9);
   width: 100%;
   max-width: 100%;
+  position: relative;
+  transition: border-color 0.2s ease;
 }
 
-.code-bar {
-  display: flex;
+.code-box:hover {
+  border-color: #222222;
+}
+
+.run-code-btn {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  display: inline-flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 0.75rem 1.25rem;
-  background: #080808;
-  border-bottom: 1px solid #141414;
-}
-
-.code-name {
+  gap: 6px;
+  padding: 5px 11px;
+  border-radius: 6px;
   font-family: var(--font-mono);
-  font-size: 0.8rem;
-  color: #888888;
-}
-
-.code-copy {
-  background: transparent;
-  border: none;
-  font-family: var(--font-mono);
-  font-size: 0.75rem;
-  color: #666666;
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: #a1a1aa;
+  background: #000000;
+  border: 1px solid #222222;
   cursor: pointer;
-  transition: color 0.15s ease;
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
-  padding: 4px 8px;
-  border-radius: 4px;
+  transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+  z-index: 5;
 }
 
-.code-copy:hover {
+.run-code-btn:hover:not(:disabled) {
   color: #ffffff;
+  border-color: #444444;
+  background: #0a0a0a;
+}
+
+.run-code-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.run-spinner {
+  width: 8px;
+  height: 8px;
+  border: 1.5px solid #71717a;
+  border-top-color: #ffffff;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
 
 .code-content {
-  padding: 1.5rem;
+  padding: 1.5rem 5.5rem 1.5rem 1.5rem;
   font-family: var(--font-mono);
   font-size: 0.875rem;
   line-height: 1.7;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
   color: #dcdcdc;
+}
+
+.code-output {
+  border-top: 1px solid #141414;
+  background: #020202;
+  padding: 1rem 1.5rem;
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.output-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #52525b;
+}
+
+.output-time {
+  color: #71717a;
+}
+
+.output-text {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  line-height: 1.6;
+  color: #e4e4e7;
+  white-space: pre-wrap;
+  word-break: break-all;
+  margin: 0;
+}
+
+.output-text.error {
+  color: #f87171;
 }
 
 .scroll-prompt {
@@ -712,16 +773,25 @@ body {
     </p>
 
     <div class="code-box">
-      <div class="code-bar">
-        <span class="code-name">main.a</span>
-        <button class="code-copy" data-target="code-0">Copy</button>
-      </div>
+      <button class="run-code-btn" data-target="code-0" title="Run code">
+        <svg viewBox="0 0 24 24" width="11" height="11" fill="currentColor">
+          <polygon points="6 4 20 12 6 20 6 4"></polygon>
+        </svg>
+        <span>Run</span>
+      </button>
       <div class="code-content">
 <pre><code id="code-0" data-lang="abyss">import print from "std/io"
 
 main :: fn() {
     print("Hello from the deep!\n")
 }</code></pre>
+      </div>
+      <div class="code-output" id="output-code-0" hidden>
+        <div class="output-header">
+          <span class="output-label">OUTPUT</span>
+          <span class="output-time" id="time-code-0"></span>
+        </div>
+        <pre class="output-text" id="text-code-0"></pre>
       </div>
     </div>
 
@@ -748,10 +818,12 @@ main :: fn() {
     </div>
 
     <div class="code-box">
-      <div class="code-bar">
-        <span class="code-name">geometry.a</span>
-        <button class="code-copy" data-target="code-200">Copy</button>
-      </div>
+      <button class="run-code-btn" data-target="code-200" title="Run code">
+        <svg viewBox="0 0 24 24" width="11" height="11" fill="currentColor">
+          <polygon points="6 4 20 12 6 20 6 4"></polygon>
+        </svg>
+        <span>Run</span>
+      </button>
       <div class="code-content">
 <pre><code id="code-200" data-lang="abyss">import print from "std/io"
 
@@ -786,6 +858,13 @@ main :: fn() {
     print("\n")
 }</code></pre>
       </div>
+      <div class="code-output" id="output-code-200" hidden>
+        <div class="output-header">
+          <span class="output-label">OUTPUT</span>
+          <span class="output-time" id="time-code-200"></span>
+        </div>
+        <pre class="output-text" id="text-code-200"></pre>
+      </div>
     </div>
   </div>
 </section>
@@ -806,10 +885,12 @@ main :: fn() {
     </div>
 
     <div class="code-box">
-      <div class="code-bar">
-        <span class="code-name">comptime.a</span>
-        <button class="code-copy" data-target="code-4000">Copy</button>
-      </div>
+      <button class="run-code-btn" data-target="code-4000" title="Run code">
+        <svg viewBox="0 0 24 24" width="11" height="11" fill="currentColor">
+          <polygon points="6 4 20 12 6 20 6 4"></polygon>
+        </svg>
+        <span>Run</span>
+      </button>
       <div class="code-content">
 <pre><code id="code-4000" data-lang="abyss">import print from "std/io"
 
@@ -832,6 +913,13 @@ main :: fn() {
     print("\n")
 }</code></pre>
       </div>
+      <div class="code-output" id="output-code-4000" hidden>
+        <div class="output-header">
+          <span class="output-label">OUTPUT</span>
+          <span class="output-time" id="time-code-4000"></span>
+        </div>
+        <pre class="output-text" id="text-code-4000"></pre>
+      </div>
     </div>
   </div>
 </section>
@@ -852,12 +940,16 @@ main :: fn() {
     </div>
 
     <div class="code-box">
-      <div class="code-bar">
-        <span class="code-name">compiler_engine.a</span>
-        <button class="code-copy" data-target="code-6000">Copy</button>
-      </div>
+      <button class="run-code-btn" data-target="code-6000" title="Run code">
+        <svg viewBox="0 0 24 24" width="11" height="11" fill="currentColor">
+          <polygon points="6 4 20 12 6 20 6 4"></polygon>
+        </svg>
+        <span>Run</span>
+      </button>
       <div class="code-content">
-<pre><code id="code-6000" data-lang="abyss">HirId    :: u32
+<pre><code id="code-6000" data-lang="abyss">import print from "std/io"
+
+HirId    :: u32
 TyId     :: u32
 SymbolId :: u32
 
@@ -870,7 +962,7 @@ HirNode :: struct {
 Compiler :: struct {
     count u32
 
-    compile_node :: fn(self &Self, node &HirNode) i32 {
+    compile_node :: fn(self &Self, node &HirNode) u32 {
         node.id + node.ty
     }
 }
@@ -879,7 +971,17 @@ main :: fn() {
     c: Compiler = .{ count: 1 }
     root: HirNode = .{ id: 42, ty: 1, symbol: 100 }
     status := c.compile_node(&root)
+    print("Compilation finished. HIR node sum: ")
+    print(status)
+    print("\n")
 }</code></pre>
+      </div>
+      <div class="code-output" id="output-code-6000" hidden>
+        <div class="output-header">
+          <span class="output-label">OUTPUT</span>
+          <span class="output-time" id="time-code-6000"></span>
+        </div>
+        <pre class="output-text" id="text-code-6000"></pre>
       </div>
     </div>
   </div>
@@ -1206,19 +1308,80 @@ window.addEventListener('DOMContentLoaded', () => {
 window.addEventListener('load', updateHUD);
 updateHUD();
 
-document.querySelectorAll('.code-copy').forEach(btn => {
-  btn.addEventListener('click', () => {
-    const targetId = btn.getAttribute('data-target');
-    const el = document.getElementById(targetId);
-    if (!el) return;
+let landingWasmModule = null;
 
-    navigator.clipboard.writeText(el.innerText.trim()).then(() => {
-      const old = btn.textContent;
-      btn.textContent = 'Copied!';
-      setTimeout(() => {
-        btn.textContent = old;
-      }, 1800);
-    });
+async function getLandingWasm() {
+  if (landingWasmModule) return landingWasmModule;
+  const res = await fetch('playground/abyssc.wasm');
+  if (!res.ok) throw new Error('Failed to load WebAssembly binary');
+  const buffer = await res.arrayBuffer();
+  landingWasmModule = await WebAssembly.compile(buffer);
+  return landingWasmModule;
+}
+
+document.querySelectorAll('.run-code-btn').forEach(btn => {
+  btn.addEventListener('click', async () => {
+    const targetId = btn.getAttribute('data-target');
+    const codeEl = document.getElementById(targetId);
+    const outBox = document.getElementById('output-' + targetId);
+    const outText = document.getElementById('text-' + targetId);
+    const outTime = document.getElementById('time-' + targetId);
+    if (!codeEl || !outBox || !outText) return;
+
+    const originalContent = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<span class="run-spinner"></span><span>Running...</span>';
+
+    try {
+      const mod = await getLandingWasm();
+      let stdoutText = '';
+      const decoder = new TextDecoder();
+      let instance;
+      const imports = {
+        env: {
+          js_print_bytes: (ptr, len) => {
+            const bytes = new Uint8Array(instance.exports.memory.buffer, ptr, len);
+            stdoutText += decoder.decode(bytes);
+          },
+          js_trap: () => {
+            throw new Error('abyss_trap');
+          }
+        }
+      };
+      instance = new WebAssembly.Instance(mod, imports);
+      const code = codeEl.textContent;
+      const encoder = new TextEncoder();
+      const codeBytes = encoder.encode(code);
+      const ptr = instance.exports.alloc_source_buffer(codeBytes.length + 1);
+      const mem = new Uint8Array(instance.exports.memory.buffer);
+      mem.set(codeBytes, ptr);
+      mem[ptr + codeBytes.length] = 0;
+
+      const t0 = performance.now();
+      let exitCode = 0;
+      try {
+        exitCode = instance.exports.run_abyss(ptr, codeBytes.length);
+      } catch (err) {
+        if (err.message !== 'abyss_trap') {
+          stdoutText += '\nRuntime error: ' + err.message + '\n';
+        }
+        exitCode = 1;
+      }
+      const elapsed = (performance.now() - t0).toFixed(1);
+
+      outBox.hidden = false;
+      const cleanOutput = stdoutText.replace(/\u001b\[[0-9;]*m/g, '').trim();
+      outText.textContent = cleanOutput || '[program exited with code ' + exitCode + ']';
+      outText.className = exitCode === 0 ? 'output-text' : 'output-text error';
+      if (outTime) outTime.textContent = elapsed + ' ms';
+    } catch (err) {
+      outBox.hidden = false;
+      outText.textContent = 'Execution failed: ' + err.message;
+      outText.className = 'output-text error';
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = originalContent;
+    }
   });
 });
 </script>
