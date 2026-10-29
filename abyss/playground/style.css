@@ -66,6 +66,11 @@ html, body {
     display: block;
 }
 
+.brand-logo .abyss-glyph,
+.brand-logo .abyss-text {
+    fill: #FDFCFD;
+}
+
 .header-nav {
     display: flex;
     align-items: center;
