@@ -131,7 +131,7 @@ function setTheme(themeKeyOrObj) {
   injectTheme(themeKeyOrObj);
 }
 
-const ABYSS_KEYWORDS = new Set(["if","match","for","in","else","while","break","cont","ret","cmpt","fn","struct","enum","import","from","and","or","not","as"]);
+const ABYSS_KEYWORDS = new Set(["if","match","for","in","else","while","break","cont","ret","cmpt","fn","struct","enum","import","and","or","not","as"]);
 const ABYSS_PRIMITIVES = new Set(["u8","u16","u32","u64","u128","usize","i8","i16","i32","i64","i128","isize","f16","f32","f64","f128","bool","type","Self"]);
 const ABYSS_BOOLEANS = new Set(["true","false"]);
 

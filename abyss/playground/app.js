@@ -1,4 +1,4 @@
-const INITIAL_CODE = `import print from "std/io"
+const INITIAL_CODE = `import std.io: print
 
 main :: fn() {
     print("Welcome to the Abyss Playground!")
