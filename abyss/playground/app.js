@@ -1,123 +1,14 @@
-const EXAMPLES = {
-    hello: {
-        "main.a": `import std.io: printf
+const INITIAL_CODE = `import std.io: printf
 
 main :: fn() {
-    printf("Welcome to the Abyss VFS Playground!\\n", .{})
+    printf("Welcome to the Abyss Playground!\\n", .{})
     printf("Compiled and executed in-browser with complete filesystem abstraction.\\n", .{})
 }
-`
-    },
-    multifile: {
-        "main.a": `import std.io: printf
-import math: add_numbers, multiply
-import models: User
-
-main :: fn() {
-    u := User.new(Str.of("Hosein"), 25)
-    sum := add_numbers(15, 27)
-    prod := multiply(6, 7)
-    
-    printf("User: {}, age = {}\\n", .{u.name, u.age})
-    printf("Math operations from math.a: sum = {}, product = {}\\n", .{sum, prod})
-}
-`,
-        "math.a": `add_numbers :: fn(a i32, b i32) i32 {
-    a + b
-}
-
-multiply :: fn(a i32, b i32) i32 {
-    a * b
-}
-`,
-        "models.a": `User :: struct {
-    name Str
-    age  i32
-
-    new :: fn(name Str, age i32) Self {
-        .{ name: name, age: age }
-    }
-}
-`
-    },
-    json_pod: {
-        "main.a": `import std.io: printf
-import std.allocator: Arena
-import pods.json.json: parse_json
-
-main :: fn() {
-    arena := Arena.new(1024)
-    raw := Str.of("{\\"language\\": \\"Abyss\\", \\"version\\": \\"0.1.0\\", \\"status\\": \\"active\\"}")
-    
-    printf("Parsing JSON using pods/json pod:\\n", .{})
-    opt := parse_json(&arena, raw)
-    if opt.is_some() {
-        val := opt.unwrap()
-        lang := val.get_str(Str.of("language")).unwrap_or(Str.of("?"))
-        ver := val.get_str(Str.of("version")).unwrap_or(Str.of("?"))
-        status := val.get_str(Str.of("status")).unwrap_or(Str.of("?"))
-        
-        printf("  Language : {}\\n", .{lang})
-        printf("  Version  : {}\\n", .{ver})
-        printf("  Status   : {}\\n", .{status})
-    }
-}
-`,
-        "pod.json": `{
-  "name": "my-app",
-  "version": "1.0.0",
-  "dependencies": {
-    "json": "^0.1.0"
-  }
-}
-`
-    },
-    fibonacci: {
-        "main.a": `import std.io: printf
-
-fib :: fn(n i32) i32 {
-    if n <= 1 { ret n }
-    fib(n - 1) + fib(n - 2)
-}
-
-main :: fn() {
-    printf("Calculating Fibonacci sequence:\\n", .{})
-    i := 0
-    while i <= 10 {
-        printf("  fib({}) = {}\\n", .{i, fib(i)})
-        i = i + 1
-    }
-}
-`
-    },
-    structs: {
-        "main.a": `import std.io: printf
-
-Point :: struct {
-    x i32
-    y i32
-
-    new :: fn(x i32, y i32) Self {
-        .{ x: x, y: y }
-    }
-
-    sum :: fn(self &Self) i32 {
-        self.x + self.y
-    }
-}
-
-main :: fn() {
-    p := Point.new(15, 27)
-    printf("Point coords: ({}, {})\\n", .{p.x, p.y})
-    printf("Point sum: {}\\n", .{p.sum()})
-}
-`
-    }
-};
+`;
 
 let wasmModule = null;
 let vfsBundle = null;
-let projectFiles = {};
+let projectFiles = { "main.a": INITIAL_CODE };
 let activeFileName = "main.a";
 
 const editor = document.getElementById("code-editor");
@@ -126,26 +17,37 @@ const output = document.getElementById("output");
 const runBtn = document.getElementById("run-btn");
 const clearBtn = document.getElementById("clear-btn");
 const copyBtn = document.getElementById("copy-btn");
-const resetBtn = document.getElementById("reset-btn");
 const newFileBtn = document.getElementById("new-file-btn");
-const exampleSelect = document.getElementById("example-select");
 const statusPill = document.getElementById("status-pill");
 const statusText = document.getElementById("status-text");
 const execTime = document.getElementById("exec-time");
-const userFileList = document.getElementById("user-file-list");
 const tabsContainer = document.getElementById("tabs-container");
 
 function updateLineNumbers() {
-    const lines = editor.value.split("\n").length;
+    const lines = editor.value.split("\n");
+    const count = lines.length;
     let numbers = "";
-    for (let i = 1; i <= lines; i++) {
+    for (let i = 1; i <= count; i++) {
         numbers += i + "\n";
     }
     lineNumbers.textContent = numbers;
+    lineNumbers.style.width = Math.max(44, (String(count).length * 8 + 20)) + "px";
+}
+
+function updateEditorHighlight() {
+    const codeEl = document.getElementById("editor-code");
+    if (codeEl && window.AbyssSyntax) {
+        codeEl.innerHTML = window.AbyssSyntax.highlightAbyss(editor.value) + (editor.value.endsWith("\n") ? "\n" : "");
+    }
 }
 
 function syncScroll() {
     lineNumbers.scrollTop = editor.scrollTop;
+    const highlight = document.getElementById("editor-highlight");
+    if (highlight) {
+        highlight.scrollTop = editor.scrollTop;
+        highlight.scrollLeft = editor.scrollLeft;
+    }
 }
 
 function setStatus(status, text) {
@@ -215,62 +117,48 @@ function parseAnsi(text) {
     return result;
 }
 
-function renderUI() {
-    userFileList.innerHTML = "";
+function renderTabs() {
     tabsContainer.innerHTML = "";
-
     for (const fileName of Object.keys(projectFiles)) {
-        const item = document.createElement("div");
-        item.className = "tree-item" + (fileName === activeFileName ? " active" : "");
-        item.innerHTML = `<span>📄 ${escapeHtml(fileName)}</span>`;
+        const tab = document.createElement("div");
+        tab.className = "tab-item" + (fileName === activeFileName ? " active" : "");
+        tab.textContent = fileName;
         if (fileName !== "main.a") {
-            const del = document.createElement("span");
-            del.className = "item-delete";
-            del.textContent = "✕";
-            del.title = "Delete file";
-            del.onclick = (e) => {
+            const close = document.createElement("span");
+            close.className = "tab-close";
+            close.textContent = "✕";
+            close.title = "Delete file";
+            close.onclick = (e) => {
                 e.stopPropagation();
                 delete projectFiles[fileName];
                 if (activeFileName === fileName) {
                     activeFileName = "main.a";
                 }
-                renderUI();
+                renderTabs();
+                switchFile(activeFileName);
             };
-            item.appendChild(del);
+            tab.appendChild(close);
         }
-        item.onclick = () => selectFile(fileName);
-        userFileList.appendChild(item);
-
-        const tab = document.createElement("div");
-        tab.className = "tab" + (fileName === activeFileName ? " active" : "");
-        tab.textContent = fileName;
-        tab.onclick = () => selectFile(fileName);
+        tab.onclick = () => switchFile(fileName);
         tabsContainer.appendChild(tab);
     }
-
-    editor.value = projectFiles[activeFileName] || "";
-    updateLineNumbers();
 }
 
-function selectFile(fileName) {
+function switchFile(fileName) {
     if (projectFiles[activeFileName] !== undefined) {
         projectFiles[activeFileName] = editor.value;
     }
     activeFileName = fileName;
-    renderUI();
+    editor.value = projectFiles[activeFileName] || "";
+    renderTabs();
+    updateLineNumbers();
+    updateEditorHighlight();
+    syncScroll();
 }
 
-function loadExample(key) {
-    if (EXAMPLES[key]) {
-        projectFiles = JSON.parse(JSON.stringify(EXAMPLES[key]));
-        activeFileName = "main.a";
-        renderUI();
-    }
-}
-
-async function initEnvironment() {
+async function loadWasm() {
     try {
-        setStatus("loading", "Loading VFS Bundle...");
+        setStatus("loading", "Loading Wasm");
         runBtn.disabled = true;
 
         const [wasmRes, bundleRes] = await Promise.all([
@@ -285,11 +173,11 @@ async function initEnvironment() {
         vfsBundle = await bundleRes.json();
         wasmModule = await WebAssembly.compile(wasmBuffer);
 
-        setStatus("ready", "VFS Engine Ready");
+        setStatus("ready", "Ready");
         runBtn.disabled = false;
     } catch (err) {
-        setStatus("error", "Init Error");
-        output.innerHTML = `<span class="ansi-red">Failed to initialize WebAssembly VFS: ${escapeHtml(err.message)}</span>`;
+        setStatus("error", "Error");
+        output.innerHTML = `<span class="ansi-red">Failed to initialize WebAssembly engine: ${escapeHtml(err.message)}</span>`;
     }
 }
 
@@ -324,7 +212,7 @@ async function runCode() {
         projectFiles[activeFileName] = editor.value;
     }
 
-    setStatus("running", "Executing...");
+    setStatus("running", "Running");
     runBtn.disabled = true;
     execTime.style.display = "none";
 
@@ -371,9 +259,9 @@ async function runCode() {
         execTime.style.display = "inline-block";
 
         if (exitCode === 0) {
-            setStatus("ready", "VFS Engine Ready");
+            setStatus("ready", "Ready");
         } else {
-            setStatus("error", "Process Exited");
+            setStatus("error", "Exit " + exitCode);
         }
     } catch (err) {
         output.innerHTML = `<span class="ansi-red">Execution error: ${escapeHtml(err.message)}</span>`;
@@ -386,6 +274,8 @@ async function runCode() {
 editor.addEventListener("input", () => {
     projectFiles[activeFileName] = editor.value;
     updateLineNumbers();
+    updateEditorHighlight();
+    syncScroll();
 });
 editor.addEventListener("scroll", syncScroll);
 
@@ -404,26 +294,20 @@ editor.addEventListener("keydown", (e) => {
         editor.selectionStart = editor.selectionEnd = start + 4;
         projectFiles[activeFileName] = editor.value;
         updateLineNumbers();
+        updateEditorHighlight();
+        syncScroll();
     }
 });
 
 newFileBtn.addEventListener("click", () => {
-    const name = prompt("Enter file name (e.g. math.a, helper.a, pod.json):");
+    const name = prompt("Enter file name (e.g. math.a, pod.json):");
     if (name && name.trim()) {
         const cleanName = name.trim();
         if (!projectFiles[cleanName]) {
             projectFiles[cleanName] = "";
         }
-        selectFile(cleanName);
+        switchFile(cleanName);
     }
-});
-
-exampleSelect.addEventListener("change", (e) => {
-    loadExample(e.target.value);
-});
-
-resetBtn.addEventListener("click", () => {
-    loadExample(exampleSelect.value);
 });
 
 copyBtn.addEventListener("click", () => {
@@ -441,5 +325,8 @@ clearBtn.addEventListener("click", () => {
 
 runBtn.addEventListener("click", runCode);
 
-loadExample("hello");
-initEnvironment();
+editor.value = INITIAL_CODE;
+renderTabs();
+updateLineNumbers();
+updateEditorHighlight();
+loadWasm();
