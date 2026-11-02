@@ -392,8 +392,23 @@ body {
   transition: border-color 0.2s ease;
 }
 
-.code-box:hover {
+.code-box:hover,
+.code-box:focus-within {
   border-color: #222222;
+}
+
+.code-box pre code {
+  display: block;
+  outline: none;
+  tab-size: 4;
+  -moz-tab-size: 4;
+}
+
+.code-box pre code[contenteditable="true"],
+.code-box pre code[contenteditable="plaintext-only"] {
+  outline: none;
+  caret-color: #ffffff;
+  cursor: text;
 }
 
 .run-code-btn {
@@ -1540,16 +1555,84 @@ window.addEventListener('DOMContentLoaded', () => {
 window.addEventListener('load', syncScrollTargets);
 syncScrollTargets();
 
-let landingWasmModule = null;
+let landingInitPromise = null;
 
-async function getLandingWasm() {
-  if (landingWasmModule) return landingWasmModule;
-  const res = await fetch('playground/abyssc.wasm');
-  if (!res.ok) throw new Error('Failed to load WebAssembly binary');
-  const buffer = await res.arrayBuffer();
-  landingWasmModule = await WebAssembly.compile(buffer);
-  return landingWasmModule;
+function getLandingResources() {
+  if (!landingInitPromise) {
+    landingInitPromise = (async () => {
+      const [wasmRes, bundleRes] = await Promise.all([
+        fetch('playground/abyssc.wasm'),
+        fetch('playground/vfs_bundle.json')
+      ]);
+      if (!wasmRes.ok) throw new Error('Failed to load WebAssembly binary (' + wasmRes.status + ')');
+      if (!bundleRes.ok) throw new Error('Failed to load VFS bundle (' + bundleRes.status + ')');
+      const [buffer, bundle] = await Promise.all([
+        wasmRes.arrayBuffer(),
+        bundleRes.json()
+      ]);
+      const mod = await WebAssembly.compile(buffer);
+      return { mod, vfs: bundle };
+    })().catch(err => {
+      landingInitPromise = null;
+      throw err;
+    });
+  }
+  return landingInitPromise;
 }
+
+function updateEditableSnippetMode() {
+  const isMobile = window.innerWidth <= 768 || (window.matchMedia && window.matchMedia('(max-width: 768px)').matches) || ('ontouchstart' in window && window.innerWidth <= 1024);
+  document.querySelectorAll('.code-box pre code').forEach(el => {
+    if (isMobile) {
+      el.removeAttribute('contenteditable');
+      el.removeAttribute('spellcheck');
+    } else {
+      try {
+        el.contentEditable = 'plaintext-only';
+      } catch (err) {
+        el.contentEditable = 'true';
+      }
+      el.setAttribute('spellcheck', 'false');
+      el.setAttribute('autocapitalize', 'off');
+      el.setAttribute('autocomplete', 'off');
+      el.setAttribute('autocorrect', 'off');
+    }
+  });
+}
+
+updateEditableSnippetMode();
+window.addEventListener('resize', updateEditableSnippetMode);
+window.addEventListener('orientationchange', updateEditableSnippetMode);
+
+document.querySelectorAll('.code-box pre code').forEach(el => {
+  el.addEventListener('keydown', (e) => {
+    if (!el.isContentEditable) return;
+    if (e.key === 'Tab') {
+      e.preventDefault();
+      if (!document.execCommand('insertText', false, '    ')) {
+        const sel = window.getSelection();
+        if (sel && sel.rangeCount > 0) {
+          const range = sel.getRangeAt(0);
+          range.deleteContents();
+          const node = document.createTextNode('    ');
+          range.insertNode(node);
+          range.setStartAfter(node);
+          range.collapse(true);
+          sel.removeAllRanges();
+          sel.addRange(range);
+        }
+      }
+    }
+  });
+});
+
+const preloadLandingResources = () => {
+  getLandingResources().catch(() => {});
+};
+document.querySelectorAll('.code-box').forEach(box => {
+  box.addEventListener('mouseenter', preloadLandingResources, { once: true, passive: true });
+  box.addEventListener('focusin', preloadLandingResources, { once: true, passive: true });
+});
 
 document.querySelectorAll('.run-code-btn').forEach(btn => {
   btn.addEventListener('click', async () => {
@@ -1565,9 +1648,10 @@ document.querySelectorAll('.run-code-btn').forEach(btn => {
     btn.innerHTML = '<span class="run-spinner"></span><span>Running...</span>';
 
     try {
-      const mod = await getLandingWasm();
+      const { mod, vfs } = await getLandingResources();
       let stdoutText = '';
       const decoder = new TextDecoder();
+      const encoder = new TextEncoder();
       let instance;
       const imports = {
         env: {
@@ -1581,9 +1665,21 @@ document.querySelectorAll('.run-code-btn').forEach(btn => {
         }
       };
       instance = new WebAssembly.Instance(mod, imports);
-      const code = codeEl.textContent;
-      const encoder = new TextEncoder();
-      const codeBytes = encoder.encode(code);
+
+      for (const [path, content] of Object.entries(vfs)) {
+        const pBytes = encoder.encode(path + '\0');
+        const dBytes = encoder.encode(content);
+        const pPtr = instance.exports.alloc_source_buffer(pBytes.length);
+        const dPtr = instance.exports.alloc_source_buffer(dBytes.length);
+        new Uint8Array(instance.exports.memory.buffer).set(pBytes, pPtr);
+        new Uint8Array(instance.exports.memory.buffer).set(dBytes, dPtr);
+        instance.exports.abyss_vfs_write(pPtr, dPtr, dBytes.length);
+      }
+
+      const rawCode = (codeEl.innerText !== undefined ? codeEl.innerText : codeEl.textContent)
+        .replace(/\u00A0/g, ' ')
+        .replace(/\r\n/g, '\n');
+      const codeBytes = encoder.encode(rawCode);
       const ptr = instance.exports.alloc_source_buffer(codeBytes.length + 1);
       const mem = new Uint8Array(instance.exports.memory.buffer);
       mem.set(codeBytes, ptr);
