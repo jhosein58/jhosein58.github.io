@@ -1,47 +1,151 @@
-const INITIAL_CODE = `import std.io: print
+const EXAMPLES = {
+    hello: {
+        "main.a": `import std.io: printf
 
 main :: fn() {
-    print("Welcome to the Abyss Playground!")
-    print("Compiled and executed entirely inside WebAssembly.")
+    printf("Welcome to the Abyss VFS Playground!\\n", .{})
+    printf("Compiled and executed in-browser with complete filesystem abstraction.\\n", .{})
 }
-`;
+`
+    },
+    multifile: {
+        "main.a": `import std.io: printf
+import math: add_numbers, multiply
+import models: User
+
+main :: fn() {
+    u := User.new(Str.of("Hosein"), 25)
+    sum := add_numbers(15, 27)
+    prod := multiply(6, 7)
+    
+    printf("User: {}, age = {}\\n", .{u.name, u.age})
+    printf("Math operations from math.a: sum = {}, product = {}\\n", .{sum, prod})
+}
+`,
+        "math.a": `add_numbers :: fn(a i32, b i32) i32 {
+    a + b
+}
+
+multiply :: fn(a i32, b i32) i32 {
+    a * b
+}
+`,
+        "models.a": `User :: struct {
+    name Str
+    age  i32
+
+    new :: fn(name Str, age i32) Self {
+        .{ name: name, age: age }
+    }
+}
+`
+    },
+    json_pod: {
+        "main.a": `import std.io: printf
+import std.allocator: Arena
+import pods.json.json: parse_json
+
+main :: fn() {
+    arena := Arena.new(1024)
+    raw := Str.of("{\\"language\\": \\"Abyss\\", \\"version\\": \\"0.1.0\\", \\"status\\": \\"active\\"}")
+    
+    printf("Parsing JSON using pods/json pod:\\n", .{})
+    opt := parse_json(&arena, raw)
+    if opt.is_some() {
+        val := opt.unwrap()
+        lang := val.get_str(Str.of("language")).unwrap_or(Str.of("?"))
+        ver := val.get_str(Str.of("version")).unwrap_or(Str.of("?"))
+        status := val.get_str(Str.of("status")).unwrap_or(Str.of("?"))
+        
+        printf("  Language : {}\\n", .{lang})
+        printf("  Version  : {}\\n", .{ver})
+        printf("  Status   : {}\\n", .{status})
+    }
+}
+`,
+        "pod.json": `{
+  "name": "my-app",
+  "version": "1.0.0",
+  "dependencies": {
+    "json": "^0.1.0"
+  }
+}
+`
+    },
+    fibonacci: {
+        "main.a": `import std.io: printf
+
+fib :: fn(n i32) i32 {
+    if n <= 1 { ret n }
+    fib(n - 1) + fib(n - 2)
+}
+
+main :: fn() {
+    printf("Calculating Fibonacci sequence:\\n", .{})
+    i := 0
+    while i <= 10 {
+        printf("  fib({}) = {}\\n", .{i, fib(i)})
+        i = i + 1
+    }
+}
+`
+    },
+    structs: {
+        "main.a": `import std.io: printf
+
+Point :: struct {
+    x i32
+    y i32
+
+    new :: fn(x i32, y i32) Self {
+        .{ x: x, y: y }
+    }
+
+    sum :: fn(self &Self) i32 {
+        self.x + self.y
+    }
+}
+
+main :: fn() {
+    p := Point.new(15, 27)
+    printf("Point coords: ({}, {})\\n", .{p.x, p.y})
+    printf("Point sum: {}\\n", .{p.sum()})
+}
+`
+    }
+};
 
 let wasmModule = null;
+let vfsBundle = null;
+let projectFiles = {};
+let activeFileName = "main.a";
+
 const editor = document.getElementById("code-editor");
 const lineNumbers = document.getElementById("line-numbers");
 const output = document.getElementById("output");
 const runBtn = document.getElementById("run-btn");
 const clearBtn = document.getElementById("clear-btn");
 const copyBtn = document.getElementById("copy-btn");
+const resetBtn = document.getElementById("reset-btn");
+const newFileBtn = document.getElementById("new-file-btn");
+const exampleSelect = document.getElementById("example-select");
 const statusPill = document.getElementById("status-pill");
 const statusText = document.getElementById("status-text");
 const execTime = document.getElementById("exec-time");
+const userFileList = document.getElementById("user-file-list");
+const tabsContainer = document.getElementById("tabs-container");
 
 function updateLineNumbers() {
-    const lines = editor.value.split("\n");
-    const count = lines.length;
+    const lines = editor.value.split("\n").length;
     let numbers = "";
-    for (let i = 1; i <= count; i++) {
+    for (let i = 1; i <= lines; i++) {
         numbers += i + "\n";
     }
     lineNumbers.textContent = numbers;
-    lineNumbers.style.width = Math.max(44, (String(count).length * 8 + 20)) + "px";
-}
-
-function updateEditorHighlight() {
-    const codeEl = document.getElementById("editor-code");
-    if (codeEl && window.AbyssSyntax) {
-        codeEl.innerHTML = window.AbyssSyntax.highlightAbyss(editor.value) + (editor.value.endsWith("\n") ? "\n" : "");
-    }
 }
 
 function syncScroll() {
     lineNumbers.scrollTop = editor.scrollTop;
-    const highlight = document.getElementById("editor-highlight");
-    if (highlight) {
-        highlight.scrollTop = editor.scrollTop;
-        highlight.scrollLeft = editor.scrollLeft;
-    }
 }
 
 function setStatus(status, text) {
@@ -111,36 +215,122 @@ function parseAnsi(text) {
     return result;
 }
 
-async function loadWasm() {
+function renderUI() {
+    userFileList.innerHTML = "";
+    tabsContainer.innerHTML = "";
+
+    for (const fileName of Object.keys(projectFiles)) {
+        const item = document.createElement("div");
+        item.className = "tree-item" + (fileName === activeFileName ? " active" : "");
+        item.innerHTML = `<span>📄 ${escapeHtml(fileName)}</span>`;
+        if (fileName !== "main.a") {
+            const del = document.createElement("span");
+            del.className = "item-delete";
+            del.textContent = "✕";
+            del.title = "Delete file";
+            del.onclick = (e) => {
+                e.stopPropagation();
+                delete projectFiles[fileName];
+                if (activeFileName === fileName) {
+                    activeFileName = "main.a";
+                }
+                renderUI();
+            };
+            item.appendChild(del);
+        }
+        item.onclick = () => selectFile(fileName);
+        userFileList.appendChild(item);
+
+        const tab = document.createElement("div");
+        tab.className = "tab" + (fileName === activeFileName ? " active" : "");
+        tab.textContent = fileName;
+        tab.onclick = () => selectFile(fileName);
+        tabsContainer.appendChild(tab);
+    }
+
+    editor.value = projectFiles[activeFileName] || "";
+    updateLineNumbers();
+}
+
+function selectFile(fileName) {
+    if (projectFiles[activeFileName] !== undefined) {
+        projectFiles[activeFileName] = editor.value;
+    }
+    activeFileName = fileName;
+    renderUI();
+}
+
+function loadExample(key) {
+    if (EXAMPLES[key]) {
+        projectFiles = JSON.parse(JSON.stringify(EXAMPLES[key]));
+        activeFileName = "main.a";
+        renderUI();
+    }
+}
+
+async function initEnvironment() {
     try {
-        setStatus("loading", "Loading Wasm");
+        setStatus("loading", "Loading VFS Bundle...");
         runBtn.disabled = true;
 
-        const response = await fetch("abyssc.wasm");
-        if (!response.ok) {
-            throw new Error(`Failed to load abyssc.wasm (${response.status})`);
-        }
+        const [wasmRes, bundleRes] = await Promise.all([
+            fetch("abyssc.wasm"),
+            fetch("vfs_bundle.json")
+        ]);
 
-        const buffer = await response.arrayBuffer();
-        wasmModule = await WebAssembly.compile(buffer);
+        if (!wasmRes.ok) throw new Error(`Failed to load abyssc.wasm (${wasmRes.status})`);
+        if (!bundleRes.ok) throw new Error(`Failed to load vfs_bundle.json (${bundleRes.status})`);
 
-        setStatus("ready", "Ready");
+        const wasmBuffer = await wasmRes.arrayBuffer();
+        vfsBundle = await bundleRes.json();
+        wasmModule = await WebAssembly.compile(wasmBuffer);
+
+        setStatus("ready", "VFS Engine Ready");
         runBtn.disabled = false;
     } catch (err) {
-        setStatus("error", "Wasm Error");
-        output.innerHTML = `<span class="ansi-red">Failed to initialize WebAssembly engine: ${escapeHtml(err.message)}</span>`;
+        setStatus("error", "Init Error");
+        output.innerHTML = `<span class="ansi-red">Failed to initialize WebAssembly VFS: ${escapeHtml(err.message)}</span>`;
+    }
+}
+
+function mountVfs(instance, enc) {
+    if (vfsBundle) {
+        for (const [path, content] of Object.entries(vfsBundle)) {
+            const pBytes = enc.encode(path + "\0");
+            const dBytes = enc.encode(content);
+            const pPtr = instance.exports.alloc_source_buffer(pBytes.length);
+            const dPtr = instance.exports.alloc_source_buffer(dBytes.length);
+            new Uint8Array(instance.exports.memory.buffer).set(pBytes, pPtr);
+            new Uint8Array(instance.exports.memory.buffer).set(dBytes, dPtr);
+            instance.exports.abyss_vfs_write(pPtr, dPtr, dBytes.length);
+        }
+    }
+
+    for (const [path, content] of Object.entries(projectFiles)) {
+        const pBytes = enc.encode(path + "\0");
+        const dBytes = enc.encode(content);
+        const pPtr = instance.exports.alloc_source_buffer(pBytes.length);
+        const dPtr = instance.exports.alloc_source_buffer(dBytes.length);
+        new Uint8Array(instance.exports.memory.buffer).set(pBytes, pPtr);
+        new Uint8Array(instance.exports.memory.buffer).set(dBytes, dPtr);
+        instance.exports.abyss_vfs_write(pPtr, dPtr, dBytes.length);
     }
 }
 
 async function runCode() {
     if (!wasmModule) return;
 
-    setStatus("running", "Running");
+    if (projectFiles[activeFileName] !== undefined) {
+        projectFiles[activeFileName] = editor.value;
+    }
+
+    setStatus("running", "Executing...");
     runBtn.disabled = true;
     execTime.style.display = "none";
 
     let stdoutText = "";
     const decoder = new TextDecoder();
+    const encoder = new TextEncoder();
 
     try {
         let instance;
@@ -157,18 +347,16 @@ async function runCode() {
         };
 
         instance = new WebAssembly.Instance(wasmModule, imports);
+        mountVfs(instance, encoder);
 
-        const encoder = new TextEncoder();
-        const codeBytes = encoder.encode(editor.value);
-        const ptr = instance.exports.alloc_source_buffer(codeBytes.length + 1);
-        const mem = new Uint8Array(instance.exports.memory.buffer);
-        mem.set(codeBytes, ptr);
-        mem[ptr + codeBytes.length] = 0;
+        const mBytes = encoder.encode("main.a\0");
+        const mPtr = instance.exports.alloc_source_buffer(mBytes.length);
+        new Uint8Array(instance.exports.memory.buffer).set(mBytes, mPtr);
 
         const t0 = performance.now();
         let exitCode = 0;
         try {
-            exitCode = instance.exports.run_abyss(ptr, codeBytes.length);
+            exitCode = instance.exports.run_abyss_file(mPtr, 6);
         } catch (trapErr) {
             if (trapErr.message !== "abyss_trap") {
                 stdoutText += `\nRuntime error: ${trapErr.message}\n`;
@@ -183,9 +371,9 @@ async function runCode() {
         execTime.style.display = "inline-block";
 
         if (exitCode === 0) {
-            setStatus("ready", "Ready");
+            setStatus("ready", "VFS Engine Ready");
         } else {
-            setStatus("error", "Exit " + exitCode);
+            setStatus("error", "Process Exited");
         }
     } catch (err) {
         output.innerHTML = `<span class="ansi-red">Execution error: ${escapeHtml(err.message)}</span>`;
@@ -196,9 +384,8 @@ async function runCode() {
 }
 
 editor.addEventListener("input", () => {
+    projectFiles[activeFileName] = editor.value;
     updateLineNumbers();
-    updateEditorHighlight();
-    syncScroll();
 });
 editor.addEventListener("scroll", syncScroll);
 
@@ -215,10 +402,28 @@ editor.addEventListener("keydown", (e) => {
         const end = editor.selectionEnd;
         editor.value = editor.value.substring(0, start) + "    " + editor.value.substring(end);
         editor.selectionStart = editor.selectionEnd = start + 4;
+        projectFiles[activeFileName] = editor.value;
         updateLineNumbers();
-        updateEditorHighlight();
-        syncScroll();
     }
+});
+
+newFileBtn.addEventListener("click", () => {
+    const name = prompt("Enter file name (e.g. math.a, helper.a, pod.json):");
+    if (name && name.trim()) {
+        const cleanName = name.trim();
+        if (!projectFiles[cleanName]) {
+            projectFiles[cleanName] = "";
+        }
+        selectFile(cleanName);
+    }
+});
+
+exampleSelect.addEventListener("change", (e) => {
+    loadExample(e.target.value);
+});
+
+resetBtn.addEventListener("click", () => {
+    loadExample(exampleSelect.value);
 });
 
 copyBtn.addEventListener("click", () => {
@@ -236,7 +441,5 @@ clearBtn.addEventListener("click", () => {
 
 runBtn.addEventListener("click", runCode);
 
-editor.value = INITIAL_CODE;
-updateLineNumbers();
-updateEditorHighlight();
-loadWasm();
+loadExample("hello");
+initEnvironment();

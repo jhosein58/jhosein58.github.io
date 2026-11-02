@@ -3,62 +3,43 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Abyss &bull; Playground</title>
+    <title>Abyss Playground</title>
     <link rel="stylesheet" href="style.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1254 1254'%3E%3Cpolygon points='564.2,313.5 692.1,313.5 975.0,939.5 854.0,939.5 627.9,436.3 392.2,939.5 270.6,939.5' fill='%23FFFFFF'/%3E%3Ccircle cx='626.3' cy='705.1' r='67.5' fill='%23FFFFFF'/%3E%3C/svg%3E" />
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
     <div class="app-container">
         <header class="app-header">
-            <div class="header-left">
-                <a href="/abyss" class="brand-link" aria-label="Abyss Home">
-                    <svg class="brand-logo" viewBox="230 250 2750 740">
-                        <defs>
-                            <filter id="soft-shadow" x="-10%" y="-10%" width="120%" height="120%">
-                                <feDropShadow dx="0" dy="1" stdDeviation="3.5" flood-color="#000000" flood-opacity="0.16" />
-                            </filter>
-                            <style>
-                                .abyss-glyph, .abyss-text {
-                                    fill: #05070a;
-                                }
-                                .abyss-text {
-                                    font-family: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-                                    font-size: 710px;
-                                    font-weight: 900;
-                                    letter-spacing: 20px;
-                                }
-                                @media (prefers-color-scheme: dark) {
-                                    .abyss-glyph, .abyss-text {
-                                        fill: #FDFCFD;
-                                    }
-                                }
-                            </style>
-                        </defs>
-                        <g filter="url(#soft-shadow)">
-                            <g class="abyss-glyph">
-                                <polygon points="550.0,313.5 702.0,313.5 975.0,939.5 820.0,939.5 626.0,468.0 425.0,939.5 270.0,939.5" />
-                                <circle cx="626.0" cy="745.0" r="70.0" />
-                            </g>
-                            <text x="1060" y="939.5" class="abyss-text">BYSS</text>
-                        </g>
+            <div class="brand">
+                <div class="brand-icon">
+                    <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                        <polygon points="12 2 2 22 22 22 12 2"></polygon>
                     </svg>
-                </a>
-                <nav class="header-nav">
-                    <a href="/abyss/docs/">Docs</a>
-                    <a href="https://github.com/jhosein58/abyss" target="_blank" rel="noopener">GitHub</a>
-                </nav>
+                </div>
+                <div class="brand-text">
+                    <span class="brand-name">ABYSS</span>
+                    <span class="brand-tag">Virtual File System Playground</span>
+                </div>
             </div>
-            <div class="header-right">
+            <div class="header-controls">
+                <div class="select-wrapper">
+                    <select id="example-select" aria-label="Select Example">
+                        <option value="hello">Hello World</option>
+                        <option value="multifile">Multi-File Project</option>
+                        <option value="json_pod">Pods & JSON Parsing</option>
+                        <option value="fibonacci">Fibonacci & Recursion</option>
+                        <option value="structs">Structs & Records</option>
+                    </select>
+                </div>
                 <div id="status-pill" class="status-pill loading">
                     <span class="status-dot"></span>
-                    <span id="status-text">Loading Wasm</span>
+                    <span id="status-text">Loading Wasm...</span>
                 </div>
-                <button id="run-btn" class="btn" title="Run (Ctrl+Enter)">
-                    <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
-                        <polygon points="6 4 20 12 6 20 6 4"></polygon>
+                <button id="run-btn" class="btn btn-primary" title="Run (Ctrl+Enter)">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+                        <polygon points="5 3 19 12 5 21 5 3"></polygon>
                     </svg>
                     <span>Run</span>
                     <kbd class="kbd-shortcut">Ctrl+↵</kbd>
@@ -67,34 +48,64 @@
         </header>
 
         <main class="workspace">
+            <aside class="sidebar">
+                <div class="sidebar-header">
+                    <span>EXPLORER (VFS)</span>
+                    <button id="new-file-btn" class="icon-btn" title="New Virtual File">
+                        <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none">
+                            <line x1="12" y1="5" x2="12" y2="19"></line>
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                        </svg>
+                    </button>
+                </div>
+                <div class="file-tree" id="user-file-list"></div>
+                <div class="sidebar-header vfs-pods-header">
+                    <span>SYSTEM PODS</span>
+                    <span class="vfs-tag">VFS</span>
+                </div>
+                <div class="file-tree system-pods" id="system-pods-list">
+                    <div class="tree-item folder"><span>📁 pods/core</span></div>
+                    <div class="tree-item folder"><span>📁 pods/std</span></div>
+                    <div class="tree-item folder"><span>📁 pods/json</span></div>
+                </div>
+            </aside>
+
             <section class="panel editor-panel">
                 <div class="panel-header">
-                    <span class="panel-title">Source</span>
+                    <div class="tabs-container" id="tabs-container"></div>
                     <div class="panel-actions">
                         <button id="copy-btn" class="icon-btn" title="Copy code">
-                            <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none">
+                            <svg viewBox="0 0 24 24" width="15" height="15" stroke="currentColor" stroke-width="2" fill="none">
                                 <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
                                 <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                            </svg>
+                        </button>
+                        <button id="reset-btn" class="icon-btn" title="Reset project">
+                            <svg viewBox="0 0 24 24" width="15" height="15" stroke="currentColor" stroke-width="2" fill="none">
+                                <polyline points="1 4 1 10 7 10"></polyline>
+                                <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
                             </svg>
                         </button>
                     </div>
                 </div>
                 <div class="editor-wrapper">
                     <div id="line-numbers" class="line-numbers"></div>
-                    <div class="editor-stage">
-                        <pre id="editor-highlight" aria-hidden="true"><code id="editor-code"></code></pre>
-                        <textarea id="code-editor" spellcheck="false" autocomplete="off" autocapitalize="off"></textarea>
-                    </div>
+                    <textarea id="code-editor" spellcheck="false" autocomplete="off" autocapitalize="off"></textarea>
                 </div>
             </section>
 
             <section class="panel terminal-panel">
-                <div class="panel-header">
-                    <span class="panel-title">Output</span>
-                    <div class="panel-actions">
+                <div class="panel-header terminal-header">
+                    <div class="terminal-dots">
+                        <span class="dot red"></span>
+                        <span class="dot yellow"></span>
+                        <span class="dot green"></span>
+                        <span class="terminal-title">Terminal Console</span>
+                    </div>
+                    <div class="terminal-info">
                         <span id="exec-time" class="exec-time"></span>
                         <button id="clear-btn" class="icon-btn" title="Clear console">
-                            <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none">
+                            <svg viewBox="0 0 24 24" width="15" height="15" stroke="currentColor" stroke-width="2" fill="none">
                                 <polyline points="3 6 5 6 21 6"></polyline>
                                 <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
                             </svg>
@@ -102,12 +113,16 @@
                     </div>
                 </div>
                 <div id="terminal" class="terminal-body">
+                    <div class="terminal-welcome">
+                        <div class="welcome-badge">ABYSS COMPILER & VM &bull; VFS ENGINE</div>
+                        <div class="welcome-text">Complete virtual file system mounted in browser memory.</div>
+                        <div class="welcome-hint">Standard library pods and user files reside in VFS with native import semantics.</div>
+                    </div>
                     <pre id="output"></pre>
                 </div>
             </section>
         </main>
     </div>
-    <script src="../syntax.js"></script>
     <script src="app.js"></script>
 </body>
 </html>
