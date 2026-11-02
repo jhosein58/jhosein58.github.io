@@ -6,8 +6,14 @@ main :: fn() {
 }
 `;
 
-let wasmModule = null;
-let vfsBundle = null;
+AbyssEnv.configure({
+    wasmPath: "abyssc.wasm",
+    vfsPath: "vfs_bundle.json"
+});
+
+const escapeHtml = AbyssEnv.escapeHtml;
+const parseAnsi = AbyssEnv.parseAnsi;
+
 let projectFiles = { "main.a": INITIAL_CODE };
 let activeFileName = "main.a";
 
@@ -55,68 +61,6 @@ function setStatus(status, text) {
     statusText.textContent = text;
 }
 
-function escapeHtml(text) {
-    return text
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;");
-}
-
-function parseAnsi(text) {
-    const colors = {
-        "30": "ansi-black",
-        "31": "ansi-red",
-        "32": "ansi-green",
-        "33": "ansi-yellow",
-        "34": "ansi-blue",
-        "35": "ansi-magenta",
-        "36": "ansi-cyan",
-        "37": "ansi-white"
-    };
-
-    let result = "";
-    let i = 0;
-    let activeTags = 0;
-
-    while (i < text.length) {
-        if (text.charCodeAt(i) === 27 && text[i + 1] === "[") {
-            const end = text.indexOf("m", i + 2);
-            if (end !== -1) {
-                const codes = text.substring(i + 2, end).split(";");
-                i = end + 1;
-
-                if (codes.includes("0") || codes[0] === "") {
-                    while (activeTags > 0) {
-                        result += "</span>";
-                        activeTags--;
-                    }
-                }
-
-                let classes = [];
-                for (const c of codes) {
-                    if (c === "1") classes.push("ansi-bold");
-                    if (colors[c]) classes.push(colors[c]);
-                }
-
-                if (classes.length > 0) {
-                    result += `<span class="${classes.join(" ")}">`;
-                    activeTags++;
-                }
-                continue;
-            }
-        }
-        result += escapeHtml(text[i]);
-        i++;
-    }
-
-    while (activeTags > 0) {
-        result += "</span>";
-        activeTags--;
-    }
-
-    return result;
-}
-
 function renderTabs() {
     tabsContainer.innerHTML = "";
     for (const fileName of Object.keys(projectFiles)) {
@@ -160,19 +104,7 @@ async function loadWasm() {
     try {
         setStatus("loading", "Loading Wasm");
         runBtn.disabled = true;
-
-        const [wasmRes, bundleRes] = await Promise.all([
-            fetch("abyssc.wasm"),
-            fetch("vfs_bundle.json")
-        ]);
-
-        if (!wasmRes.ok) throw new Error(`Failed to load abyssc.wasm (${wasmRes.status})`);
-        if (!bundleRes.ok) throw new Error(`Failed to load vfs_bundle.json (${bundleRes.status})`);
-
-        const wasmBuffer = await wasmRes.arrayBuffer();
-        vfsBundle = await bundleRes.json();
-        wasmModule = await WebAssembly.compile(wasmBuffer);
-
+        await AbyssEnv.load();
         setStatus("ready", "Ready");
         runBtn.disabled = false;
     } catch (err) {
@@ -181,33 +113,7 @@ async function loadWasm() {
     }
 }
 
-function mountVfs(instance, enc) {
-    if (vfsBundle) {
-        for (const [path, content] of Object.entries(vfsBundle)) {
-            const pBytes = enc.encode(path + "\0");
-            const dBytes = enc.encode(content);
-            const pPtr = instance.exports.alloc_source_buffer(pBytes.length);
-            const dPtr = instance.exports.alloc_source_buffer(dBytes.length);
-            new Uint8Array(instance.exports.memory.buffer).set(pBytes, pPtr);
-            new Uint8Array(instance.exports.memory.buffer).set(dBytes, dPtr);
-            instance.exports.abyss_vfs_write(pPtr, dPtr, dBytes.length);
-        }
-    }
-
-    for (const [path, content] of Object.entries(projectFiles)) {
-        const pBytes = enc.encode(path + "\0");
-        const dBytes = enc.encode(content);
-        const pPtr = instance.exports.alloc_source_buffer(pBytes.length);
-        const dPtr = instance.exports.alloc_source_buffer(dBytes.length);
-        new Uint8Array(instance.exports.memory.buffer).set(pBytes, pPtr);
-        new Uint8Array(instance.exports.memory.buffer).set(dBytes, dPtr);
-        instance.exports.abyss_vfs_write(pPtr, dPtr, dBytes.length);
-    }
-}
-
 async function runCode() {
-    if (!wasmModule) return;
-
     if (projectFiles[activeFileName] !== undefined) {
         projectFiles[activeFileName] = editor.value;
     }
@@ -216,52 +122,20 @@ async function runCode() {
     runBtn.disabled = true;
     execTime.style.display = "none";
 
-    let stdoutText = "";
-    const decoder = new TextDecoder();
-    const encoder = new TextEncoder();
-
     try {
-        let instance;
-        const imports = {
-            env: {
-                js_print_bytes: (ptr, len) => {
-                    const bytes = new Uint8Array(instance.exports.memory.buffer, ptr, len);
-                    stdoutText += decoder.decode(bytes);
-                },
-                js_trap: () => {
-                    throw new Error("abyss_trap");
-                }
-            }
-        };
+        const res = await AbyssEnv.run(editor.value, {
+            files: projectFiles,
+            entry: activeFileName
+        });
 
-        instance = new WebAssembly.Instance(wasmModule, imports);
-        mountVfs(instance, encoder);
-
-        const mBytes = encoder.encode("main.a\0");
-        const mPtr = instance.exports.alloc_source_buffer(mBytes.length);
-        new Uint8Array(instance.exports.memory.buffer).set(mBytes, mPtr);
-
-        const t0 = performance.now();
-        let exitCode = 0;
-        try {
-            exitCode = instance.exports.run_abyss_file(mPtr, 6);
-        } catch (trapErr) {
-            if (trapErr.message !== "abyss_trap") {
-                stdoutText += `\nRuntime error: ${trapErr.message}\n`;
-            }
-            exitCode = 1;
-        }
-        const t1 = performance.now();
-        const elapsed = (t1 - t0).toFixed(1);
-
-        output.innerHTML = parseAnsi(stdoutText);
-        execTime.textContent = `${elapsed} ms`;
+        output.innerHTML = parseAnsi(res.rawOutput);
+        execTime.textContent = `${res.elapsed} ms`;
         execTime.style.display = "inline-block";
 
-        if (exitCode === 0) {
+        if (res.exitCode === 0) {
             setStatus("ready", "Ready");
         } else {
-            setStatus("error", "Exit " + exitCode);
+            setStatus("error", "Exit " + res.exitCode);
         }
     } catch (err) {
         output.innerHTML = `<span class="ansi-red">Execution error: ${escapeHtml(err.message)}</span>`;

@@ -10,6 +10,7 @@
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1254 1254'%3E%3Cpolygon points='564.2,313.5 692.1,313.5 975.0,939.5 854.0,939.5 627.9,436.3 392.2,939.5 270.6,939.5' fill='%23FFFFFF'/%3E%3Ccircle cx='626.3' cy='705.1' r='67.5' fill='%23FFFFFF'/%3E%3C/svg%3E" />
 <script src="syntax.js"></script>
+<script src="env.js"></script>
 <style>
 :root {
   --bg-color: #000000;
@@ -1555,31 +1556,6 @@ window.addEventListener('DOMContentLoaded', () => {
 window.addEventListener('load', syncScrollTargets);
 syncScrollTargets();
 
-let landingInitPromise = null;
-
-function getLandingResources() {
-  if (!landingInitPromise) {
-    landingInitPromise = (async () => {
-      const [wasmRes, bundleRes] = await Promise.all([
-        fetch('playground/abyssc.wasm'),
-        fetch('playground/vfs_bundle.json')
-      ]);
-      if (!wasmRes.ok) throw new Error('Failed to load WebAssembly binary (' + wasmRes.status + ')');
-      if (!bundleRes.ok) throw new Error('Failed to load VFS bundle (' + bundleRes.status + ')');
-      const [buffer, bundle] = await Promise.all([
-        wasmRes.arrayBuffer(),
-        bundleRes.json()
-      ]);
-      const mod = await WebAssembly.compile(buffer);
-      return { mod, vfs: bundle };
-    })().catch(err => {
-      landingInitPromise = null;
-      throw err;
-    });
-  }
-  return landingInitPromise;
-}
-
 function updateEditableSnippetMode() {
   const isMobile = window.innerWidth <= 768 || (window.matchMedia && window.matchMedia('(max-width: 768px)').matches) || ('ontouchstart' in window && window.innerWidth <= 1024);
   document.querySelectorAll('.code-box pre code').forEach(el => {
@@ -1626,14 +1602,6 @@ document.querySelectorAll('.code-box pre code').forEach(el => {
   });
 });
 
-const preloadLandingResources = () => {
-  getLandingResources().catch(() => {});
-};
-document.querySelectorAll('.code-box').forEach(box => {
-  box.addEventListener('mouseenter', preloadLandingResources, { once: true, passive: true });
-  box.addEventListener('focusin', preloadLandingResources, { once: true, passive: true });
-});
-
 document.querySelectorAll('.run-code-btn').forEach(btn => {
   btn.addEventListener('click', async () => {
     const targetId = btn.getAttribute('data-target');
@@ -1648,60 +1616,13 @@ document.querySelectorAll('.run-code-btn').forEach(btn => {
     btn.innerHTML = '<span class="run-spinner"></span><span>Running...</span>';
 
     try {
-      const { mod, vfs } = await getLandingResources();
-      let stdoutText = '';
-      const decoder = new TextDecoder();
-      const encoder = new TextEncoder();
-      let instance;
-      const imports = {
-        env: {
-          js_print_bytes: (ptr, len) => {
-            const bytes = new Uint8Array(instance.exports.memory.buffer, ptr, len);
-            stdoutText += decoder.decode(bytes);
-          },
-          js_trap: () => {
-            throw new Error('abyss_trap');
-          }
-        }
-      };
-      instance = new WebAssembly.Instance(mod, imports);
-
-      for (const [path, content] of Object.entries(vfs)) {
-        const pBytes = encoder.encode(path + '\0');
-        const dBytes = encoder.encode(content);
-        const pPtr = instance.exports.alloc_source_buffer(pBytes.length);
-        const dPtr = instance.exports.alloc_source_buffer(dBytes.length);
-        new Uint8Array(instance.exports.memory.buffer).set(pBytes, pPtr);
-        new Uint8Array(instance.exports.memory.buffer).set(dBytes, dPtr);
-        instance.exports.abyss_vfs_write(pPtr, dPtr, dBytes.length);
-      }
-
-      const rawCode = (codeEl.innerText !== undefined ? codeEl.innerText : codeEl.textContent)
-        .replace(/\u00A0/g, ' ')
-        .replace(/\r\n/g, '\n');
-      const codeBytes = encoder.encode(rawCode);
-      const ptr = instance.exports.alloc_source_buffer(codeBytes.length + 1);
-      const mem = new Uint8Array(instance.exports.memory.buffer);
-      mem.set(codeBytes, ptr);
-      mem[ptr + codeBytes.length] = 0;
-
-      const t0 = performance.now();
-      let exitCode = 0;
-      try {
-        exitCode = instance.exports.run_abyss(ptr, codeBytes.length);
-      } catch (err) {
-        if (err.message !== 'abyss_trap') {
-          stdoutText += '\nRuntime error: ' + err.message + '\n';
-        }
-        exitCode = 1;
-      }
-      const elapsed = (performance.now() - t0).toFixed(1);
+      const code = codeEl.innerText !== undefined ? codeEl.innerText : codeEl.textContent;
+      const res = await AbyssEnv.run(code);
 
       outBox.hidden = false;
-      const cleanOutput = stdoutText.replace(/\u001b\[[0-9;]*m/g, '').trim();
-      outText.textContent = cleanOutput || '[program exited with code ' + exitCode + ']';
-      outText.className = exitCode === 0 ? 'output-text' : 'output-text error';
-      if (outTime) outTime.textContent = elapsed + ' ms';
+      outText.textContent = res.output || '[program exited with code ' + res.exitCode + ']';
+      outText.className = res.exitCode === 0 ? 'output-text' : 'output-text error';
+      if (outTime) outTime.textContent = res.elapsed + ' ms';
     } catch (err) {
       outBox.hidden = false;
       outText.textContent = 'Execution failed: ' + err.message;
