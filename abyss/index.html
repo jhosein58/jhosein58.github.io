@@ -599,13 +599,14 @@ body {
   text-indent: 0.18em;
   user-select: none;
   position: relative;
+  will-change: filter;
 }
 
 .abyss-char {
   display: inline-block;
   color: #ffffff;
   opacity: 0;
-  will-change: transform, opacity;
+  will-change: transform, opacity, filter, text-shadow;
 }
 
 .abyss-sub-title {
@@ -885,6 +886,15 @@ body {
     </a>
   </nav>
 </header>
+
+<svg class="svg-defs" aria-hidden="true">
+  <defs>
+    <filter id="abyss-current-filter" x="-25%" y="-40%" width="150%" height="180%" color-interpolation-filters="sRGB">
+      <feTurbulence id="current-turbulence" type="fractalNoise" baseFrequency="0.012 0.048" numOctaves="2" seed="4" result="noise" />
+      <feDisplacementMap id="current-displacement" in="SourceGraphic" in2="noise" scale="0" xChannelSelector="R" yChannelSelector="G" />
+    </filter>
+  </defs>
+</svg>
 
 <div class="depth-track-system">
   <div class="depth-gauge-wrap">
@@ -1213,6 +1223,8 @@ const chars = document.querySelectorAll('.abyss-char');
 const subtitle = document.getElementById('abyss-subtitle');
 const actions = document.getElementById('revelation-actions');
 const bottomNav = document.getElementById('bottom-nav');
+const dispMap = document.getElementById('current-displacement');
+const turbMap = document.getElementById('current-turbulence');
 
 const stages = [
   { el: stage0, depth: 0 },
@@ -1414,15 +1426,20 @@ function renderFrame() {
   if (targetP >= 0.992 && smoothP >= 0.988) {
     if (!isLockedClean) {
       isLockedClean = true;
+      if (dispMap) dispMap.setAttribute('scale', '0');
+      if (abyssTitle) abyssTitle.style.filter = 'none';
 
       for (let i = 0; i < chars.length; i++) {
         chars[i].style.opacity = '1';
+        chars[i].style.filter = 'none';
         chars[i].style.transform = 'none';
+        chars[i].style.textShadow = 'none';
       }
 
       if (subtitle) {
         subtitle.style.opacity = '1';
         subtitle.style.transform = 'none';
+        subtitle.style.filter = 'none';
       }
       if (actions) {
         actions.style.opacity = '1';
@@ -1439,9 +1456,12 @@ function renderFrame() {
   isLockedClean = false;
 
   if (smoothP <= 0.002) {
+    if (abyssTitle) abyssTitle.style.filter = 'none';
     for (let i = 0; i < chars.length; i++) {
       chars[i].style.opacity = '0';
+      chars[i].style.filter = 'none';
       chars[i].style.transform = 'none';
+      chars[i].style.textShadow = 'none';
     }
     if (subtitle) subtitle.style.opacity = '0';
     if (actions) actions.style.opacity = '0';
@@ -1452,6 +1472,21 @@ function renderFrame() {
 
   const time = performance.now() * 0.001;
   const settle = Math.min(Math.max((smoothP - 0.82) / 0.17, 0), 1);
+  const currentEnvelope = Math.pow(1 - smoothP, 1.35) * (1 - settle * 0.85);
+
+  if (dispMap && turbMap && abyssTitle) {
+    const dispScale = currentEnvelope * 34;
+    if (dispScale > 0.35) {
+      const freqX = (0.011 + Math.sin(smoothP * 6 + time * 0.4) * 0.002).toFixed(4);
+      const freqY = (0.045 + Math.cos(smoothP * 5 - time * 0.35) * 0.008).toFixed(4);
+      turbMap.setAttribute('baseFrequency', freqX + ' ' + freqY);
+      dispMap.setAttribute('scale', dispScale.toFixed(2));
+      abyssTitle.style.filter = 'url(#abyss-current-filter)';
+    } else {
+      dispMap.setAttribute('scale', '0');
+      abyssTitle.style.filter = 'none';
+    }
+  }
 
   for (let i = 0; i < chars.length; i++) {
     const c = charSeeds[i];
@@ -1463,22 +1498,37 @@ function renderFrame() {
     const pocket = (wave1 * 0.55 + wave2 * 0.45) * Math.sin(rawLocal * Math.PI);
 
     const depthRemaining = Math.max(0, 1 - baseEase);
+    const nonUniformBlur = Math.max(0, (depthRemaining * 26 + Math.max(0, -pocket) * 11 * depthRemaining) * (1 - settle * 0.92));
+
     const lightPulse = Math.max(0, baseEase + pocket * 0.28 * (1 - rawLocal * 0.6));
     const opacity = Math.min(Math.max(lightPulse, 0), 1);
 
+    const brightness = 0.25 + 0.75 * baseEase + Math.max(0, pocket) * 0.35 * (1 - settle);
     const driftFactor = Math.pow(depthRemaining, 1.5) * (1 - settle);
     const tx = (c.driftX * driftFactor + wave2 * 3.5 * driftFactor).toFixed(2);
     const ty = (c.driftY * driftFactor + wave1 * 5.0 * driftFactor).toFixed(2);
 
+    const halationStrength = Math.sin(rawLocal * Math.PI) * (1 - settle);
+    const halationBlur = (halationStrength * 22).toFixed(1);
+    const halationAlpha = (halationStrength * 0.38).toFixed(3);
+
     chars[i].style.opacity = opacity.toFixed(3);
     chars[i].style.transform = driftFactor > 0.005 ? 'translate3d(' + tx + 'px, ' + ty + 'px, 0)' : 'none';
+    chars[i].style.filter = nonUniformBlur > 0.15
+      ? 'blur(' + nonUniformBlur.toFixed(2) + 'px) brightness(' + brightness.toFixed(2) + ')'
+      : 'none';
+    chars[i].style.textShadow = halationStrength > 0.02
+      ? '0 0 ' + halationBlur + 'px rgba(255, 255, 255, ' + halationAlpha + ')'
+      : 'none';
   }
 
   if (subtitle) {
     const subP = Math.min(Math.max((smoothP - 0.74) / 0.22, 0), 1);
     const subEase = subP * subP * (3 - 2 * subP);
+    const subBlur = (1 - subEase) * 8;
     subtitle.style.opacity = subEase.toFixed(3);
     subtitle.style.transform = subEase < 0.995 ? 'translate3d(0, ' + ((1 - subEase) * 10).toFixed(2) + 'px, 0)' : 'none';
+    subtitle.style.filter = subBlur > 0.15 ? 'blur(' + subBlur.toFixed(2) + 'px)' : 'none';
   }
 
   if (actions) {
