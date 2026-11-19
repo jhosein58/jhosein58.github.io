@@ -10,11 +10,8 @@ main :: fn() {
 `;
 
     AbyssEnv.configure({
-        wasmPath: "abyssc.wasm"
+        wasmPath: "abyssc.wasm?v=0.24.0"
     });
-
-    const escapeHtml = AbyssEnv.escapeHtml;
-    const parseAnsi = AbyssEnv.parseAnsi;
 
     const editor = document.getElementById("code-editor");
     const lineNumbers = document.getElementById("line-numbers");
@@ -67,7 +64,7 @@ main :: fn() {
             runBtn.disabled = false;
         } catch (err) {
             setStatus("error", "Error");
-            output.innerHTML = `<span class="ansi-red">Failed to initialize WebAssembly engine: ${escapeHtml(err.message)}</span>`;
+            output.innerHTML = `<span class="ansi-red">Failed to initialize WebAssembly engine: ${AbyssEnv.escapeHtml(err.message)}</span>`;
         }
     }
 
@@ -79,7 +76,7 @@ main :: fn() {
         try {
             const res = await AbyssEnv.run(editor.value);
 
-            output.innerHTML = parseAnsi(res.rawOutput);
+            output.innerHTML = AbyssEnv.parseAnsi(res.rawOutput);
             execTime.textContent = `${res.elapsed} ms`;
             execTime.style.display = "inline-block";
 
@@ -89,7 +86,7 @@ main :: fn() {
                 setStatus("error", "Exit " + res.exitCode);
             }
         } catch (err) {
-            output.innerHTML = `<span class="ansi-red">Execution error: ${escapeHtml(err.message)}</span>`;
+            output.innerHTML = `<span class="ansi-red">Execution error: ${AbyssEnv.escapeHtml(err.message)}</span>`;
             setStatus("error", "Error");
         } finally {
             runBtn.disabled = false;
