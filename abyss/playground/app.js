@@ -2,20 +2,16 @@ const INITIAL_CODE = `import std.io: printf
 
 main :: fn() {
     printf("Welcome to the Abyss Playground!\\n", .{})
-    printf("Compiled and executed in-browser with complete filesystem abstraction.\\n", .{})
+    printf("Compiled and executed in-browser via WebAssembly.\\n", .{})
 }
 `;
 
 AbyssEnv.configure({
-    wasmPath: "abyssc.wasm",
-    vfsPath: "vfs_bundle.json"
+    wasmPath: "abyssc.wasm"
 });
 
 const escapeHtml = AbyssEnv.escapeHtml;
 const parseAnsi = AbyssEnv.parseAnsi;
-
-let projectFiles = { "main.a": INITIAL_CODE };
-let activeFileName = "main.a";
 
 const editor = document.getElementById("code-editor");
 const lineNumbers = document.getElementById("line-numbers");
@@ -23,11 +19,9 @@ const output = document.getElementById("output");
 const runBtn = document.getElementById("run-btn");
 const clearBtn = document.getElementById("clear-btn");
 const copyBtn = document.getElementById("copy-btn");
-const newFileBtn = document.getElementById("new-file-btn");
 const statusPill = document.getElementById("status-pill");
 const statusText = document.getElementById("status-text");
 const execTime = document.getElementById("exec-time");
-const tabsContainer = document.getElementById("tabs-container");
 
 function updateLineNumbers() {
     const lines = editor.value.split("\n");
@@ -61,45 +55,6 @@ function setStatus(status, text) {
     statusText.textContent = text;
 }
 
-function renderTabs() {
-    tabsContainer.innerHTML = "";
-    for (const fileName of Object.keys(projectFiles)) {
-        const tab = document.createElement("div");
-        tab.className = "tab-item" + (fileName === activeFileName ? " active" : "");
-        tab.textContent = fileName;
-        if (fileName !== "main.a") {
-            const close = document.createElement("span");
-            close.className = "tab-close";
-            close.textContent = "✕";
-            close.title = "Delete file";
-            close.onclick = (e) => {
-                e.stopPropagation();
-                delete projectFiles[fileName];
-                if (activeFileName === fileName) {
-                    activeFileName = "main.a";
-                }
-                renderTabs();
-                switchFile(activeFileName);
-            };
-            tab.appendChild(close);
-        }
-        tab.onclick = () => switchFile(fileName);
-        tabsContainer.appendChild(tab);
-    }
-}
-
-function switchFile(fileName) {
-    if (projectFiles[activeFileName] !== undefined) {
-        projectFiles[activeFileName] = editor.value;
-    }
-    activeFileName = fileName;
-    editor.value = projectFiles[activeFileName] || "";
-    renderTabs();
-    updateLineNumbers();
-    updateEditorHighlight();
-    syncScroll();
-}
-
 async function loadWasm() {
     try {
         setStatus("loading", "Loading Wasm");
@@ -114,19 +69,12 @@ async function loadWasm() {
 }
 
 async function runCode() {
-    if (projectFiles[activeFileName] !== undefined) {
-        projectFiles[activeFileName] = editor.value;
-    }
-
     setStatus("running", "Running");
     runBtn.disabled = true;
     execTime.style.display = "none";
 
     try {
-        const res = await AbyssEnv.run(editor.value, {
-            files: projectFiles,
-            entry: activeFileName
-        });
+        const res = await AbyssEnv.run(editor.value);
 
         output.innerHTML = parseAnsi(res.rawOutput);
         execTime.textContent = `${res.elapsed} ms`;
@@ -146,7 +94,6 @@ async function runCode() {
 }
 
 editor.addEventListener("input", () => {
-    projectFiles[activeFileName] = editor.value;
     updateLineNumbers();
     updateEditorHighlight();
     syncScroll();
@@ -166,21 +113,9 @@ editor.addEventListener("keydown", (e) => {
         const end = editor.selectionEnd;
         editor.value = editor.value.substring(0, start) + "    " + editor.value.substring(end);
         editor.selectionStart = editor.selectionEnd = start + 4;
-        projectFiles[activeFileName] = editor.value;
         updateLineNumbers();
         updateEditorHighlight();
         syncScroll();
-    }
-});
-
-newFileBtn.addEventListener("click", () => {
-    const name = prompt("Enter file name (e.g. math.a, pod.json):");
-    if (name && name.trim()) {
-        const cleanName = name.trim();
-        if (!projectFiles[cleanName]) {
-            projectFiles[cleanName] = "";
-        }
-        switchFile(cleanName);
     }
 });
 
@@ -200,7 +135,6 @@ clearBtn.addEventListener("click", () => {
 runBtn.addEventListener("click", runCode);
 
 editor.value = INITIAL_CODE;
-renderTabs();
 updateLineNumbers();
 updateEditorHighlight();
 loadWasm();

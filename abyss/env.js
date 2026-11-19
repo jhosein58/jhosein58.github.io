@@ -70,10 +70,7 @@
 
   const AbyssEnv = {
     wasmPath: 'playground/abyssc.wasm',
-    vfsPath: 'playground/vfs_bundle.json',
     wasmModule: null,
-    vfsBundle: null,
-    vfsEncoded: null,
     loadPromise: null,
     encoder: new TextEncoder(),
     decoder: new TextDecoder(),
@@ -81,53 +78,34 @@
     configure: function(opts) {
       if (!opts) return;
       if (opts.wasmPath) this.wasmPath = opts.wasmPath;
-      if (opts.vfsPath) this.vfsPath = opts.vfsPath;
     },
 
     isReady: function() {
-      return this.wasmModule !== null && this.vfsEncoded !== null;
+      return this.wasmModule !== null;
     },
 
     load: function() {
-      if (this.wasmModule && this.vfsEncoded) {
-        return Promise.resolve({ mod: this.wasmModule, vfs: this.vfsBundle });
+      if (this.wasmModule) {
+        return Promise.resolve({ mod: this.wasmModule });
       }
       if (this.loadPromise) return this.loadPromise;
 
       const self = this;
       this.loadPromise = (async function() {
-        const wasmPromise = (async () => {
-          try {
-            if (typeof WebAssembly.compileStreaming === 'function') {
-              return await WebAssembly.compileStreaming(fetch(self.wasmPath));
-            }
-          } catch (_) {}
+        let mod;
+        try {
+          if (typeof WebAssembly.compileStreaming === 'function') {
+            mod = await WebAssembly.compileStreaming(fetch(self.wasmPath));
+          }
+        } catch (_) {}
+        if (!mod) {
           const res = await fetch(self.wasmPath);
           if (!res.ok) throw new Error('Failed to load WebAssembly binary (' + res.status + ')');
           const buf = await res.arrayBuffer();
-          return await WebAssembly.compile(buf);
-        })();
-
-        const bundlePromise = (async () => {
-          const res = await fetch(self.vfsPath);
-          if (!res.ok) throw new Error('Failed to load VFS bundle (' + res.status + ')');
-          return await res.json();
-        })();
-
-        const [mod, bundle] = await Promise.all([wasmPromise, bundlePromise]);
-
-        const preEncoded = [];
-        for (const [path, content] of Object.entries(bundle)) {
-          preEncoded.push({
-            pathBytes: self.encoder.encode(path + '\0'),
-            dataBytes: self.encoder.encode(content)
-          });
+          mod = await WebAssembly.compile(buf);
         }
-
         self.wasmModule = mod;
-        self.vfsBundle = bundle;
-        self.vfsEncoded = preEncoded;
-        return { mod: mod, vfs: bundle };
+        return { mod: mod };
       })().catch(function(err) {
         self.loadPromise = null;
         throw err;
@@ -136,74 +114,152 @@
       return this.loadPromise;
     },
 
-    run: async function(code, options) {
-      options = options || {};
+    run: async function(code) {
       await this.load();
 
-      let stdoutText = '';
-      let trapped = false;
-      const self = this;
+      const cleanCode = (code || '').replace(/\u00A0/g, ' ').replace(/\r\n/g, '\n');
+      const codeBytes = this.encoder.encode(cleanCode);
 
-      const imports = {
-        env: {
-          js_print_bytes: function(ptr, len) {
-            const bytes = new Uint8Array(instance.exports.memory.buffer, ptr, len);
-            stdoutText += self.decoder.decode(bytes);
-          },
-          js_trap: function() {
-            trapped = true;
-            throw new Error('abyss_trap');
+      const args = ['abyssc', 'r', 'main.a'];
+      const argsEncoded = args.map(a => this.encoder.encode(a + '\0'));
+      const totalArgsLen = argsEncoded.reduce((acc, a) => acc + a.length, 0);
+
+      let stdoutText = '';
+      let exitCode = 0;
+      let openFiles = {};
+      let nextFd = 4;
+      let memory;
+
+      const self = this;
+      const wasi = {
+        args_sizes_get: (argc_ptr, argv_buf_size_ptr) => {
+          const view = new DataView(memory.buffer);
+          view.setUint32(argc_ptr, args.length, true);
+          view.setUint32(argv_buf_size_ptr, totalArgsLen, true);
+          return 0;
+        },
+        args_get: (argv_ptr, argv_buf_ptr) => {
+          const view = new DataView(memory.buffer);
+          const mem = new Uint8Array(memory.buffer);
+          let currBuf = argv_buf_ptr;
+          for (let i = 0; i < argsEncoded.length; i++) {
+            view.setUint32(argv_ptr + i * 4, currBuf, true);
+            mem.set(argsEncoded[i], currBuf);
+            currBuf += argsEncoded[i].length;
           }
-        }
+          return 0;
+        },
+        environ_sizes_get: (count_ptr, size_ptr) => {
+          const view = new DataView(memory.buffer);
+          view.setUint32(count_ptr, 0, true);
+          view.setUint32(size_ptr, 0, true);
+          return 0;
+        },
+        environ_get: () => 0,
+        proc_exit: (status) => {
+          exitCode = status;
+          throw new Error('__wasi_exit_' + status);
+        },
+        fd_prestat_get: (fd, prestat_ptr) => {
+          if (fd === 3) {
+            const view = new DataView(memory.buffer);
+            view.setUint32(prestat_ptr, 0, true);
+            view.setUint32(prestat_ptr + 4, 1, true);
+            return 0;
+          }
+          return 8;
+        },
+        fd_prestat_dir_name: (fd, name_ptr) => {
+          if (fd === 3) {
+            new Uint8Array(memory.buffer)[name_ptr] = 46;
+            return 0;
+          }
+          return 8;
+        },
+        path_open: (fd, lookup_flags, path_ptr, path_len, oflags, rights_base, rights_inheriting, fdflags, opened_fd_ptr) => {
+          const mem = new Uint8Array(memory.buffer);
+          let path = self.decoder.decode(mem.subarray(path_ptr, path_ptr + path_len));
+          if (path.startsWith('./')) path = path.slice(2);
+          if (path === 'main.a') {
+            const f = nextFd++;
+            openFiles[f] = { data: codeBytes, offset: 0 };
+            new DataView(memory.buffer).setUint32(opened_fd_ptr, f, true);
+            return 0;
+          }
+          return 44;
+        },
+        fd_read: (fd, iovs_ptr, iovs_len, nread_ptr) => {
+          const file = openFiles[fd];
+          if (!file) return 8;
+          const view = new DataView(memory.buffer);
+          const mem = new Uint8Array(memory.buffer);
+          let totalRead = 0;
+          for (let i = 0; i < iovs_len; i++) {
+            let ptr = view.getUint32(iovs_ptr + i * 8, true);
+            let len = view.getUint32(iovs_ptr + i * 8 + 4, true);
+            if (len === 0 && view.getUint32(iovs_ptr + i * 16 + 8, true) > 0) {
+              ptr = view.getUint32(iovs_ptr + i * 16, true);
+              len = view.getUint32(iovs_ptr + i * 16 + 8, true);
+            }
+            const avail = Math.min(len, file.data.length - file.offset);
+            if (avail > 0) {
+              mem.set(file.data.subarray(file.offset, file.offset + avail), ptr);
+              file.offset += avail;
+              totalRead += avail;
+            }
+          }
+          view.setUint32(nread_ptr, totalRead, true);
+          return 0;
+        },
+        fd_seek: (fd, offset, whence, new_offset_ptr) => {
+          const file = openFiles[fd];
+          if (!file) return 8;
+          let newPos = file.offset;
+          offset = Number(offset);
+          if (whence === 0) newPos = offset;
+          else if (whence === 1) newPos += offset;
+          else if (whence === 2) newPos = file.data.length + offset;
+          file.offset = Math.max(0, Math.min(newPos, file.data.length));
+          new DataView(memory.buffer).setBigUint64(new_offset_ptr, BigInt(file.offset), true);
+          return 0;
+        },
+        fd_close: (fd) => {
+          delete openFiles[fd];
+          return 0;
+        },
+        fd_write: (fd, iovs_ptr, iovs_len, nwritten_ptr) => {
+          const view = new DataView(memory.buffer);
+          const mem = new Uint8Array(memory.buffer);
+          let total = 0;
+          for (let i = 0; i < iovs_len; i++) {
+            let ptr = view.getUint32(iovs_ptr + i * 8, true);
+            let len = view.getUint32(iovs_ptr + i * 8 + 4, true);
+            if (len === 0 && view.getUint32(iovs_ptr + i * 16 + 8, true) > 0) {
+              ptr = view.getUint32(iovs_ptr + i * 16, true);
+              len = view.getUint32(iovs_ptr + i * 16 + 8, true);
+            }
+            if (fd === 1 || fd === 2) {
+              stdoutText += self.decoder.decode(mem.subarray(ptr, ptr + len));
+            }
+            total += len;
+          }
+          view.setUint32(nwritten_ptr, total, true);
+          return 0;
+        },
+        path_create_directory: () => 0,
+        fd_readdir: () => 0
       };
 
-      const instance = new WebAssembly.Instance(this.wasmModule, imports);
-
-      for (let i = 0; i < this.vfsEncoded.length; i++) {
-        const item = this.vfsEncoded[i];
-        const pPtr = instance.exports.alloc_source_buffer(item.pathBytes.length);
-        const dPtr = instance.exports.alloc_source_buffer(item.dataBytes.length);
-        const mem = new Uint8Array(instance.exports.memory.buffer);
-        mem.set(item.pathBytes, pPtr);
-        mem.set(item.dataBytes, dPtr);
-        instance.exports.abyss_vfs_write(pPtr, dPtr, item.dataBytes.length);
-      }
-
-      if (options.files) {
-        const entryFile = options.entry || 'main.a';
-        for (const [p, c] of Object.entries(options.files)) {
-          if (p === entryFile) continue;
-          const pBytes = this.encoder.encode(p + '\0');
-          const dBytes = this.encoder.encode(c);
-          const pPtr = instance.exports.alloc_source_buffer(pBytes.length);
-          const dPtr = instance.exports.alloc_source_buffer(dBytes.length);
-          const mem = new Uint8Array(instance.exports.memory.buffer);
-          mem.set(pBytes, pPtr);
-          mem.set(dBytes, dPtr);
-          instance.exports.abyss_vfs_write(pPtr, dPtr, dBytes.length);
-        }
-      }
-
-      const cleanCode = (code || '').replace(/\u00A0/g, ' ').replace(/\r\n/g, '\n');
-      const entryName = options.entry || 'main.a';
-      const pBytes = this.encoder.encode(entryName + '\0');
-      const cBytes = this.encoder.encode(cleanCode);
-      const pPtr = instance.exports.alloc_source_buffer(pBytes.length);
-      const cPtr = instance.exports.alloc_source_buffer(cBytes.length);
-      const mem = new Uint8Array(instance.exports.memory.buffer);
-      mem.set(pBytes, pPtr);
-      mem.set(cBytes, cPtr);
-      instance.exports.abyss_vfs_write(pPtr, cPtr, cBytes.length);
-
       const t0 = performance.now();
-      let exitCode = 0;
       try {
-        exitCode = instance.exports.run_abyss_file(pPtr, pBytes.length - 1);
+        const instance = await WebAssembly.instantiate(this.wasmModule, { wasi_snapshot_preview1: wasi });
+        memory = instance.exports.memory;
+        instance.exports._start();
       } catch (err) {
-        if (!trapped && err.message !== 'abyss_trap') {
+        if (!err.message.startsWith('__wasi_exit_')) {
           stdoutText += '\nRuntime error: ' + err.message + '\n';
+          exitCode = 1;
         }
-        exitCode = 1;
       }
       const elapsed = parseFloat((performance.now() - t0).toFixed(1));
 
