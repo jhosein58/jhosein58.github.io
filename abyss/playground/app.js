@@ -1,16 +1,14 @@
 (function() {
     'use strict';
 
-    const INITIAL_CODE = `import std.io: printf
-
-main :: fn() {
-    printf("Welcome to the Abyss Playground!\\n", .{})
-    printf("Compiled and executed in-browser via WebAssembly.\\n", .{})
+    const INITIAL_CODE = `main :: fn() {
+    print("Welcome to the Abyss Playground!")
+    print("Compiled and executed in-browser via WebAssembly.")
 }
 `;
 
     AbyssEnv.configure({
-        wasmPath: "abyssc.wasm?v=0.24.0"
+        wasmPath: "abyssc.wasm?v=0.24.1"
     });
 
     const editor = document.getElementById("code-editor");
