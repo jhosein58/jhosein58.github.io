@@ -69,7 +69,7 @@
   }
 
   const AbyssEnv = {
-    wasmPath: 'playground/abyssc.wasm',
+    wasmPath: 'playground/abyssc.wasm?v=0.25.0',
     wasmModule: null,
     loadPromise: null,
     encoder: new TextEncoder(),

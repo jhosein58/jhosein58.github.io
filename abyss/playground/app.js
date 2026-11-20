@@ -8,7 +8,7 @@
 `;
 
     AbyssEnv.configure({
-        wasmPath: "abyssc.wasm?v=0.24.1"
+        wasmPath: "abyssc.wasm?v=0.25.0"
     });
 
     const editor = document.getElementById("code-editor");
