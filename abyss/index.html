@@ -1,1638 +1,1001 @@
-<!doctype html>
-<html lang="en">
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-<title>ABYSS</title>
-<meta name="description" content="A statically typed systems programming language designed for mechanical sympathy, predictability, and raw performance." />
-<link rel="preconnect" href="https://fonts.googleapis.com" />
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1254 1254'%3E%3Cpolygon points='564.2,313.5 692.1,313.5 975.0,939.5 854.0,939.5 627.9,436.3 392.2,939.5 270.6,939.5' fill='%23FFFFFF'/%3E%3Ccircle cx='626.3' cy='705.1' r='67.5' fill='%23FFFFFF'/%3E%3C/svg%3E" />
-<script src="syntax.js?v=0.24.0"></script>
-<script src="env.js?v=0.25.0"></script>
-<style>
-:root {
-  --bg-color: #000000;
-  --text-main: #f0f0f0;
-  --text-dim: #707070;
-  --text-muted: #3a3a3a;
-  --border-line: #181818;
-  --accent-white: #ffffff;
-  --font-sans: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, sans-serif;
-  --font-mono: "JetBrains Mono", monospace;
-}
-
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-  -webkit-tap-highlight-color: transparent;
-}
-
-.topbar {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 48px;
-  background: rgba(0, 0, 0, 0.85);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border-bottom: 1px solid var(--border-line);
-  z-index: 1001;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 1.5rem;
-  transition: opacity 0.35s ease, transform 0.35s ease;
-}
-
-.topbar.hidden {
-  opacity: 0;
-  pointer-events: none;
-  transform: translateY(-8px);
-}
-
-.topbar-brand {
-  display: flex;
-  align-items: center;
-  text-decoration: none;
-  opacity: 0.92;
-  transition: opacity 0.15s ease;
-}
-
-.topbar-brand:hover {
-  opacity: 1;
-}
-
-.topbar-logo-svg {
-  height: 20px;
-  width: auto;
-  display: block;
-}
-
-.topbar-logo-svg .abyss-glyph,
-.topbar-logo-svg .abyss-text {
-  fill: #FDFCFD;
-}
-
-.topbar-nav {
-  display: flex;
-  align-items: center;
-  gap: 1.25rem;
-  font-family: var(--font-mono);
-  font-size: 0.78rem;
-}
-
-.topbar-link {
-  color: #888888;
-  text-decoration: none;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  transition: color 0.15s ease;
-}
-
-.topbar-link:hover {
-  color: #ffffff;
-}
-
-.topbar-github-icon {
-  width: 14px;
-  height: 14px;
-  fill: currentColor;
-}
-
-html {
-  scroll-behavior: smooth;
-  background-color: #000000;
-  color: var(--text-main);
-  font-family: var(--font-sans);
-  -webkit-font-smoothing: antialiased;
-  width: 100%;
-  max-width: 100vw;
-  overflow-x: clip;
-}
-
-body {
-  background-color: #000000;
-  min-height: 100vh;
-  min-height: 100dvh;
-  width: 100%;
-  max-width: 100vw;
-  position: relative;
-  overflow-x: clip;
-}
-
-.svg-defs {
-  position: absolute;
-  width: 0;
-  height: 0;
-  pointer-events: none;
-  overflow: hidden;
-}
-
-.depth-track-system {
-  position: fixed;
-  right: 1.75rem;
-  top: calc(48px + 5.5vh);
-  z-index: 998;
-  pointer-events: none;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  user-select: none;
-}
-
-.depth-gauge-wrap {
-  position: relative;
-  height: 66vh;
-  width: 28px;
-  display: flex;
-  justify-content: flex-end;
-}
-
-.depth-rail {
-  position: absolute;
-  right: 0;
-  top: 0;
-  width: 1px;
-  height: 100%;
-  background: rgba(255, 255, 255, 0.08);
-}
-
-.depth-rail-fill {
-  width: 100%;
-  height: 0%;
-  background: rgba(255, 255, 255, 0.35);
-  will-change: height;
-}
-
-.depth-ticks {
-  position: absolute;
-  right: 1px;
-  top: 0;
-  width: 24px;
-  height: 100%;
-  pointer-events: none;
-  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 5%, #000 95%, transparent 100%);
-  mask-image: linear-gradient(to bottom, transparent 0%, #000 5%, #000 95%, transparent 100%);
-}
-
-.depth-tick-row {
-  position: absolute;
-  right: 0;
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  height: 1px;
-  transform-origin: right center;
-  will-change: transform, opacity;
-}
-
-.depth-tick-line {
-  height: 1px;
-  background: #ffffff;
-  transform-origin: right center;
-  will-change: width;
-}
-
-.depth-endpoint {
-  position: absolute;
-  right: 0;
-  bottom: 0;
-  width: 24px;
-  height: 24px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  pointer-events: auto;
-  cursor: pointer;
-  z-index: 2;
-  transform: translate(calc(50% - 0.5px), 50%);
-}
-
-.depth-descend-label {
-  position: absolute;
-  right: calc(100% + 4px);
-  font-family: var(--font-mono);
-  font-size: 0.56rem;
-  font-weight: 500;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.18);
-  white-space: nowrap;
-  user-select: none;
-  pointer-events: auto;
-  transition: color 0.2s ease, opacity 0.25s ease;
-}
-
-.depth-endpoint:hover .depth-descend-label {
-  color: rgba(255, 255, 255, 0.65);
-}
-
-.depth-dot {
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.24);
-  box-shadow: none;
-  transition: transform 0.25s ease, background-color 0.25s ease;
-}
-
-.depth-endpoint:hover .depth-dot {
-  background: rgba(255, 255, 255, 0.55);
-  transform: scale(1.1);
-  box-shadow: none;
-}
-
-.depth-dot.lit {
-  background: #ffffff;
-  transform: scale(1.15);
-  box-shadow: none;
-}
-
-.depth-tracker {
-  position: fixed;
-  right: calc(1.75rem + 16px);
-  top: 0;
-  z-index: 1000;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  pointer-events: none;
-  font-family: var(--font-mono);
-  will-change: transform;
-}
-
-.depth-data {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  text-align: right;
-  line-height: 1;
-  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.95);
-}
-
-.depth-readout-row {
-  display: flex;
-  align-items: baseline;
-  gap: 6px;
-}
-
-.depth-pressure {
-  font-size: 0.52rem;
-  font-weight: 400;
-  color: rgba(255, 255, 255, 0.26);
-  letter-spacing: 0.06em;
-  font-variant-numeric: tabular-nums;
-}
-
-.depth-meters {
-  font-size: 0.94rem;
-  font-weight: 600;
-  color: rgba(255, 255, 255, 0.88);
-  letter-spacing: -0.02em;
-  line-height: 1.05;
-  font-variant-numeric: tabular-nums;
-  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), color 0.2s ease;
-}
-
-.depth-meters.infinite-mode {
-  color: #ffffff;
-  transform: scale(1.04);
-}
-
-.depth-zone {
-  font-size: 0.52rem;
-  letter-spacing: 0.14em;
-  color: rgba(255, 255, 255, 0.28);
-  text-transform: uppercase;
-  margin-top: 0.2rem;
-  transition: color 0.2s ease;
-}
-
-.depth-reticle {
-  position: relative;
-  width: 12px;
-  height: 1px;
-  background: rgba(255, 255, 255, 0.75);
-  flex-shrink: 0;
-}
-
-.container {
-  max-width: 980px;
-  margin: 0 auto;
-  padding: 0 2rem;
-  padding-right: 7rem;
-  width: 100%;
-}
-
-.stage-section {
-  min-height: 100vh;
-  min-height: 100dvh;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  padding: 7rem 0;
-  position: relative;
-}
-
-.depth-tag {
-  font-family: var(--font-mono);
-  font-size: 0.75rem;
-  letter-spacing: 0.15em;
-  color: var(--text-dim);
-  margin-bottom: 1.25rem;
-  text-transform: uppercase;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.depth-tag::before {
-  content: "";
-  display: inline-block;
-  width: 6px;
-  height: 6px;
-  background: #ffffff;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-
-.stage-title {
-  font-size: clamp(1.85rem, 4.5vw, 3.25rem);
-  font-weight: 800;
-  letter-spacing: -0.04em;
-  line-height: 1.15;
-  color: #ffffff;
-  margin-bottom: 1.25rem;
-  word-break: break-word;
-}
-
-.stage-desc {
-  font-size: clamp(0.92rem, 2vw, 1.05rem);
-  line-height: 1.7;
-  color: #999999;
-  max-width: 680px;
-  margin-bottom: 2.5rem;
-}
-
-.code-box {
-  background: #000000;
-  border: 1px solid #141414;
-  border-radius: 14px;
-  overflow: hidden;
-  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.9);
-  width: 100%;
-  max-width: 100%;
-  position: relative;
-  transition: border-color 0.2s ease;
-}
-
-.code-box:hover,
-.code-box:focus-within {
-  border-color: #222222;
-}
-
-.code-box pre code {
-  display: block;
-  outline: none;
-  tab-size: 4;
-  -moz-tab-size: 4;
-}
-
-.code-box pre code[contenteditable="true"],
-.code-box pre code[contenteditable="plaintext-only"] {
-  outline: none;
-  caret-color: #ffffff;
-  cursor: text;
-}
-
-.run-code-btn {
-  position: absolute;
-  top: 14px;
-  right: 14px;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 5px 11px;
-  border-radius: 6px;
-  font-family: var(--font-mono);
-  font-size: 0.72rem;
-  font-weight: 500;
-  color: #a1a1aa;
-  background: #000000;
-  border: 1px solid #222222;
-  cursor: pointer;
-  touch-action: manipulation;
-  -webkit-tap-highlight-color: transparent;
-  transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
-  z-index: 5;
-}
-
-.run-code-btn:hover:not(:disabled) {
-  color: #ffffff;
-  border-color: #444444;
-  background: #0a0a0a;
-}
-
-.run-code-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.run-spinner {
-  width: 8px;
-  height: 8px;
-  border: 1.5px solid #71717a;
-  border-top-color: #ffffff;
-  border-radius: 50%;
-  animation: spin 0.6s linear infinite;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
-.code-content {
-  padding: 1.5rem 5.5rem 1.5rem 1.5rem;
-  font-family: var(--font-mono);
-  font-size: 0.875rem;
-  line-height: 1.7;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-  color: #dcdcdc;
-}
-
-.code-output {
-  border-top: 1px solid #141414;
-  background: #020202;
-  padding: 1rem 1.5rem;
-  animation: fadeIn 0.2s ease-out;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(-4px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-.output-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 0.5rem;
-  font-family: var(--font-mono);
-  font-size: 0.68rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: #52525b;
-}
-
-.output-time {
-  color: #71717a;
-}
-
-.output-text {
-  font-family: var(--font-mono);
-  font-size: 0.8rem;
-  line-height: 1.6;
-  color: #e4e4e7;
-  white-space: pre-wrap;
-  word-break: break-all;
-  margin: 0;
-}
-
-.output-text.error {
-  color: #f87171;
-}
-
-.scroll-prompt {
-  margin-top: 3.5rem;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-family: var(--font-mono);
-  font-size: 0.75rem;
-  color: #555555;
-  letter-spacing: 0.15em;
-  text-transform: uppercase;
-}
-
-.scroll-arrow {
-  animation: pulse-down 1.8s infinite ease-in-out;
-}
-
-@keyframes pulse-down {
-  0%, 100% { transform: translateY(0); opacity: 0.4; }
-  50% { transform: translateY(6px); opacity: 1; }
-}
-
-.spec-pills {
-  display: flex;
-  gap: 0.75rem;
-  flex-wrap: wrap;
-  margin-bottom: 2.5rem;
-}
-
-.pill {
-  padding: 0.4rem 0.85rem;
-  background: #0a0a0a;
-  border: 1px solid #181818;
-  border-radius: 4px;
-  font-family: var(--font-mono);
-  font-size: 0.75rem;
-  color: #888888;
-}
-
-.the-void {
-  min-height: 35vh;
-  position: relative;
-  background: #000000;
-}
-
-.revelation-track {
-  height: 125vh;
-  position: relative;
-  background: #000000;
-}
-
-.revelation {
-  position: sticky;
-  top: 0;
-  height: 100vh;
-  height: 100dvh;
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  text-align: center;
-  background: #000000;
-  padding: 0 1.5rem;
-  box-sizing: border-box;
-  overflow: hidden;
-}
-
-.revelation-center {
-  position: relative;
-  z-index: 2;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-}
-
-.abyss-main-title {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: clamp(4.5rem, 13vw, 9.5rem);
-  font-weight: 900;
-  letter-spacing: 0.18em;
-  line-height: 1;
-  color: #ffffff;
-  margin-bottom: 0.5rem;
-  text-indent: 0.18em;
-  user-select: none;
-  position: relative;
-  will-change: filter;
-}
-
-.abyss-char {
-  display: inline-block;
-  color: #ffffff;
-  opacity: 0;
-  will-change: transform, opacity, filter, text-shadow;
-}
-
-.abyss-sub-title {
-  font-family: var(--font-mono);
-  font-size: clamp(0.85rem, 1.8vw, 1.15rem);
-  letter-spacing: 0.35em;
-  text-transform: uppercase;
-  color: #737373;
-  margin-bottom: 2.75rem;
-  text-indent: 0.35em;
-  opacity: 0;
-  will-change: transform, opacity, filter;
-}
-
-.revelation-actions {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 1.25rem;
-  font-family: var(--font-mono);
-  font-size: 0.85rem;
-  opacity: 0;
-  will-change: transform, opacity;
-}
-
-.revelation-link {
-  color: #ffffff;
-  text-decoration: none;
-  border-bottom: 1px solid #333333;
-  padding-bottom: 2px;
-  transition: all 0.15s ease;
-  touch-action: manipulation;
-}
-
-.revelation-link:hover {
-  border-color: #ffffff;
-}
-
-.bottom-nav {
-  position: absolute;
-  bottom: 2.5rem;
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  font-family: var(--font-mono);
-  font-size: 0.75rem;
-  color: #333333;
-  opacity: 0;
-  will-change: opacity;
-}
-
-.bottom-nav a {
-  color: #555555;
-  text-decoration: none;
-  transition: color 0.15s ease;
-  touch-action: manipulation;
-}
-
-.bottom-nav a:hover {
-  color: #ffffff;
-}
-
-@media (max-width: 1024px) {
-  .container {
-    padding: 0 2rem;
-    padding-right: 6.5rem;
-  }
-}
-
-@media (max-width: 768px) {
-  .container {
-    padding: 0 1.5rem;
-    padding-right: 5.25rem;
-  }
-  .stage-section {
-    padding: 4.5rem 0;
-  }
-  .depth-track-system {
-    right: 1rem;
-    top: calc(46px + 6vh);
-  }
-  .depth-gauge-wrap {
-    height: 56vh;
-    height: 56dvh;
-  }
-  .depth-descend-label {
-    font-size: 0.5rem;
-  }
-  .depth-tracker {
-    right: calc(1rem + 14px);
-    gap: 6px;
-  }
-  .depth-meters {
-    font-size: 0.82rem;
-  }
-  .depth-pressure {
-    display: none;
-  }
-  .depth-zone {
-    font-size: 0.46rem;
-  }
-  .depth-reticle {
-    width: 9px;
-  }
-  .code-content {
-    padding: 1.15rem 4rem 1.15rem 1.15rem;
-    font-size: 0.8rem;
-  }
-  .the-void {
-    min-height: 30vh;
-  }
-  .revelation-track {
-    height: 120vh;
-  }
-  .abyss-main-title {
-    font-size: clamp(3.75rem, 13vw, 7rem);
-    letter-spacing: 0.14em;
-    text-indent: 0.14em;
-  }
-  .abyss-sub-title {
-    font-size: 0.95rem;
-    letter-spacing: 0.28em;
-    text-indent: 0.28em;
-    margin-bottom: 2.25rem;
-  }
-}
-
-@media (max-width: 480px) {
-  .topbar {
-    padding: 0 1rem;
-    height: 44px;
-  }
-  .topbar-logo-svg {
-    height: 16px;
-  }
-  .topbar-nav {
-    gap: 0.75rem;
-    font-size: 0.72rem;
-  }
-  .depth-track-system,
-  .depth-tracker {
-    display: none !important;
-  }
-  .container {
-    padding: 0 1rem;
-    padding-right: 1rem;
-  }
-  .stage-section {
-    padding: 3.5rem 0;
-  }
-  .stage-title {
-    font-size: clamp(1.5rem, 6.5vw, 2.1rem);
-    margin-bottom: 0.85rem;
-  }
-  .stage-desc {
-    font-size: 0.88rem;
-    line-height: 1.6;
-    margin-bottom: 1.75rem;
-  }
-  .spec-pills {
-    gap: 0.4rem;
-    margin-bottom: 1.75rem;
-  }
-  .pill {
-    padding: 0.3rem 0.6rem;
-    font-size: 0.68rem;
-  }
-  .code-content {
-    padding: 1rem 3.5rem 1rem 1rem;
-    font-size: 0.78rem;
-    line-height: 1.6;
-  }
-  .scroll-prompt {
-    margin-top: 2rem;
-    font-size: 0.68rem;
-  }
-  .the-void {
-    min-height: 25vh;
-  }
-  .revelation-track {
-    height: 115vh;
-  }
-  .abyss-main-title {
-    font-size: clamp(2.75rem, 15vw, 4.25rem);
-    letter-spacing: 0.1em;
-    text-indent: 0.1em;
-  }
-  .abyss-sub-title {
-    font-size: 0.8rem;
-    letter-spacing: 0.22em;
-    text-indent: 0.22em;
-    margin-bottom: 2rem;
-  }
-  .bottom-nav {
-    bottom: 1.5rem;
-    font-size: 0.7rem;
-    gap: 0.75rem;
-  }
-}
-
-@media (max-width: 400px) {
-  .container {
-    padding: 0 0.75rem;
-    padding-right: 0.75rem;
-  }
-  .code-content {
-    padding: 0.9rem 3.2rem 0.9rem 0.85rem;
-    font-size: 0.74rem;
-  }
-  .stage-title {
-    font-size: 1.4rem;
-  }
-  .abyss-main-title {
-    font-size: 2.5rem;
-  }
-}
-
-@media (max-height: 520px) {
-  .stage-section {
-    padding: 2.5rem 0;
-  }
-  .depth-track-system {
-    top: 8vh;
-  }
-  .depth-gauge-wrap {
-    height: 44vh;
-  }
-  .bottom-nav {
-    bottom: 0.75rem;
-  }
-}
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>ABYSS — Systems Programming Language</title>
+  <meta name="description" content="A statically typed systems programming language designed for mechanical sympathy, predictability, and raw performance." />
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='270 313.5 705 626'%3E%3Cpolygon points='550.0,313.5 702.0,313.5 975.0,939.5 820.0,939.5 626.0,468.0 425.0,939.5 270.0,939.5' fill='%23FFFFFF'/%3E%3Ccircle cx='626.0' cy='745.0' r='70.0' fill='%23FFFFFF'/%3E%3C/svg%3E" />
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <script id="tailwind-config">
+    globalThis.tailwind = globalThis.tailwind || {};
+    globalThis.tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            'primary': '#FFFFFF',
+            'on-primary': '#000000',
+            'primary-container': '#E5E5E5',
+            'on-primary-container': '#000000',
+            'secondary': '#D4D4D4',
+            'on-secondary': '#000000',
+            'secondary-container': '#1A1A1A',
+            'on-secondary-container': '#E5E5E5',
+            'tertiary': '#A3A3A3',
+            'on-tertiary': '#000000',
+            'error': '#FFFFFF',
+            'on-error': '#000000',
+            'background': '#000000',
+            'on-background': '#E5E5E5',
+            'surface': '#000000',
+            'surface-container-lowest': '#000000',
+            'surface-container-low': '#050505',
+            'surface-container': '#0A0A0A',
+            'surface-container-high': '#121212',
+            'surface-container-highest': '#1A1A1A',
+            'on-surface': '#E5E5E5',
+            'on-surface-variant': '#9E9E9E',
+            'outline': '#737373',
+            'outline-variant': '#1F1F1F',
+            'inverse-surface': '#FFFFFF',
+            'inverse-on-surface': '#000000'
+          },
+          borderRadius: {
+            'none': '0px',
+            'sm': '6px',
+            'DEFAULT': '10px',
+            'md': '12px',
+            'lg': '16px',
+            'xl': '20px',
+            'full': '9999px'
+          },
+          spacing: {
+            'gutter-xs': '4px',
+            'gutter-sm': '8px',
+            'gutter-md': '16px',
+            'gutter-lg': '24px',
+            'gutter-xl': '32px',
+            'section': '96px',
+            'stratum': '160px',
+            'page-margin': '32px'
+          },
+          fontFamily: {
+            'display': ['"Syne"', 'sans-serif'],
+            'headline': ['"Syne"', 'sans-serif'],
+            'title': ['"Syne"', 'sans-serif'],
+            'body': ['"Recursive"', 'sans-serif'],
+            'label': ['"Syne"', 'sans-serif'],
+            'code': ['"Source Code Pro"', 'monospace']
+          },
+          fontSize: {
+            'display-lg': ['64px', { lineHeight: '68px', letterSpacing: '-1.5px', fontWeight: '700' }],
+            'display-lg-mobile': ['32px', { lineHeight: '36px', letterSpacing: '-0.75px', fontWeight: '700' }],
+            'display-md': ['44px', { lineHeight: '50px', letterSpacing: '-1px', fontWeight: '700' }],
+            'display-md-mobile': ['28px', { lineHeight: '34px', letterSpacing: '-0.5px', fontWeight: '700' }],
+            'headline-lg': ['32px', { lineHeight: '38px', letterSpacing: '-0.5px', fontWeight: '600' }],
+            'headline-md': ['24px', { lineHeight: '30px', letterSpacing: '-0.25px', fontWeight: '600' }],
+            'title-lg': ['18px', { lineHeight: '24px', letterSpacing: '0px', fontWeight: '600' }],
+            'body-lg': ['18px', { lineHeight: '28px', letterSpacing: '0px', fontWeight: '400' }],
+            'body-md': ['15px', { lineHeight: '24px', letterSpacing: '0px', fontWeight: '400' }],
+            'label-lg': ['14px', { lineHeight: '20px', letterSpacing: '0.25px', fontWeight: '600' }],
+            'label-sm': ['12px', { lineHeight: '16px', letterSpacing: '0.5px', fontWeight: '400' }],
+            'code-md': ['14px', { lineHeight: '22px', letterSpacing: '0px', fontWeight: '400' }]
+          },
+          transitionDuration: {
+            'state-change': '120ms',
+            'stratum-enter': '280ms'
+          },
+          transitionDelay: {
+            'state-change': '0ms',
+            'stratum-enter': '0ms'
+          },
+          transitionTimingFunction: {
+            'state-change': 'ease-out',
+            'stratum-enter': 'cubic-bezier(0.2, 0, 0, 1)'
+          }
+        }
+      }
+    };
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Recursive:wght@400;500;600&family=Source+Code+Pro:wght@400;500;600&family=Syne:wght@500;600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=block" rel="stylesheet" />
+  <script src="syntax.js?v=0.24.0"></script>
+  <script src="env.js?v=0.25.0"></script>
+  <style>
+    .material-symbols-outlined, .material-symbols-rounded, .material-symbols-sharp, .material-icons {
+      display: inline-block;
+      width: 1em;
+      height: 1em;
+      line-height: 1 !important;
+      box-sizing: content-box;
+      overflow: hidden;
+      white-space: nowrap;
+      direction: ltr;
+      vertical-align: middle;
+    }
+    html {
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+      background-color: #000000;
+    }
+    html::-webkit-scrollbar {
+      display: none;
+    }
+    .depth-tick-row {
+      position: absolute;
+      right: 0;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      height: 1px;
+      transform-origin: right center;
+      will-change: transform, opacity;
+    }
+    .depth-tick-line {
+      height: 1px;
+      background: #FFFFFF;
+      transform-origin: right center;
+      will-change: width;
+    }
+    .text-grad-mono {
+      color: #FFFFFF;
+      -webkit-mask-image: linear-gradient(180deg, #000000 35%, rgba(0, 0, 0, 0.38) 100%);
+      mask-image: linear-gradient(180deg, #000000 35%, rgba(0, 0, 0, 0.38) 100%);
+    }
+    .text-grad-abyss {
+      color: #FFFFFF;
+      -webkit-mask-image: linear-gradient(180deg, #000000 40%, rgba(0, 0, 0, 0.32) 100%);
+      mask-image: linear-gradient(180deg, #000000 40%, rgba(0, 0, 0, 0.32) 100%);
+    }
+    .mono-grad-box {
+      position: relative;
+      background:
+        linear-gradient(#060606, #040404) padding-box,
+        linear-gradient(135deg, rgba(255, 255, 255, 0.30) 0%, rgba(255, 255, 255, 0.09) 45%, rgba(255, 255, 255, 0.02) 100%) border-box;
+      border: 1px solid transparent;
+      box-shadow:
+        0 24px 60px rgba(0, 0, 0, 0.95),
+        inset 0 1px 0 rgba(255, 255, 255, 0.08);
+      transition: background 0.2s ease, box-shadow 0.2s ease;
+    }
+    .mono-grad-box:hover,
+    .mono-grad-box:focus-within {
+      background:
+        linear-gradient(#080808, #050505) padding-box,
+        linear-gradient(135deg, rgba(255, 255, 255, 0.50) 0%, rgba(255, 255, 255, 0.14) 50%, rgba(255, 255, 255, 0.04) 100%) border-box;
+      box-shadow:
+        0 28px 72px rgba(0, 0, 0, 1),
+        0 0 28px rgba(255, 255, 255, 0.04),
+        inset 0 1px 0 rgba(255, 255, 255, 0.14);
+    }
+    .code-fade-mask {
+      -webkit-mask-image: linear-gradient(to bottom, #000000 30%, rgba(0, 0, 0, 0.62) 58%, rgba(0, 0, 0, 0.22) 82%, rgba(0, 0, 0, 0.05) 100%);
+      mask-image: linear-gradient(to bottom, #000000 30%, rgba(0, 0, 0, 0.62) 58%, rgba(0, 0, 0, 0.22) 82%, rgba(0, 0, 0, 0.05) 100%);
+      transition: opacity 0.2s ease;
+    }
+    .code-box:hover .code-fade-mask,
+    .code-box:focus-within .code-fade-mask,
+    .code-box.is-interacted .code-fade-mask {
+      -webkit-mask-image: none;
+      mask-image: none;
+    }
+    .code-box pre code {
+      display: block;
+      outline: none;
+      caret-color: #FFFFFF;
+    }
+    .run-spinner {
+      width: 14px;
+      height: 14px;
+      border: 1.5px solid rgba(0, 0, 0, 0.25);
+      border-top-color: #000000;
+      border-radius: 50%;
+      animation: abyss-spin 0.65s linear infinite;
+    }
+    @keyframes abyss-spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+    .mono-divider {
+      height: 1px;
+      background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.22) 50%, transparent 100%);
+    }
+    .bg-dot-matrix {
+      background-image: radial-gradient(rgba(255, 255, 255, 0.15) 1px, transparent 1px);
+      background-size: 16px 16px;
+      -webkit-mask-image: radial-gradient(ellipse 70% 70% at 50% 50%, #000 20%, transparent 100%);
+      mask-image: radial-gradient(ellipse 70% 70% at 50% 50%, #000 20%, transparent 100%);
+    }
+    .bg-grid-micro {
+      background-image:
+        linear-gradient(to right, rgba(255, 255, 255, 0.06) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.06) 1px, transparent 1px);
+      background-size: 24px 24px;
+      -webkit-mask-image: radial-gradient(ellipse 75% 75% at 50% 50%, #000 15%, transparent 100%);
+      mask-image: radial-gradient(ellipse 75% 75% at 50% 50%, #000 15%, transparent 100%);
+    }
+    .abyss-wordmark {
+      font-size: clamp(3.25rem, 11vw, 7.5rem);
+      line-height: 1;
+      gap: 0.03em;
+    }
+    .abyss-wordmark-svg {
+      height: 0.665em;
+      width: auto;
+    }
+    .abyss-wordmark-text {
+      font-size: 1em;
+      line-height: 1.05;
+      padding-top: 0.04em;
+      padding-bottom: 0.06em;
+      font-weight: 700;
+    }
+    .grid-shadow-eclipse {
+      background:
+        radial-gradient(ellipse 34% 26% at 50% 50%, #000000 18%, rgba(0, 0, 0, 0.88) 46%, transparent 82%),
+        radial-gradient(ellipse 28% 24% at 22% 70%, rgba(0, 0, 0, 0.90) 0%, transparent 74%),
+        radial-gradient(ellipse 30% 24% at 78% 28%, rgba(0, 0, 0, 0.90) 0%, transparent 74%);
+    }
+    .abyss-soft-glow {
+      background: radial-gradient(ellipse 46% 36% at 50% 50%, rgba(255, 255, 255, 0.028) 0%, rgba(255, 255, 255, 0.006) 48%, transparent 78%);
+    }
+    .android-overscroll-glow {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 64px;
+      pointer-events: none;
+      z-index: 50;
+      opacity: 0;
+      transform-origin: bottom center;
+      transform: scaleY(0.2);
+      background: radial-gradient(ellipse 58% 100% at 50% 100%, rgba(255, 255, 255, 0.16) 0%, rgba(255, 255, 255, 0.04) 48%, transparent 78%);
+      transition: opacity 0.28s cubic-bezier(0.22, 1, 0.36, 1), transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+      will-change: opacity, transform;
+    }
+    .easter-egg-void-fade {
+      -webkit-mask-image: linear-gradient(to bottom, transparent 0%, rgba(0, 0, 0, 0.45) 14%, #000000 32%);
+      mask-image: linear-gradient(to bottom, transparent 0%, rgba(0, 0, 0, 0.45) 14%, #000000 32%);
+    }
+  </style>
 </head>
-<body>
+<body class="bg-background text-on-background min-h-screen min-h-[100dvh] antialiased selection:bg-primary selection:text-on-primary">
 
-<header class="topbar" id="topbar">
-  <a href="/abyss" class="topbar-brand" aria-label="Abyss Home">
-    <svg class="topbar-logo-svg" viewBox="230 250 2750 740" aria-hidden="true">
-      <defs>
-        <filter id="soft-shadow" x="-10%" y="-10%" width="120%" height="120%">
-          <feDropShadow dx="0" dy="1" stdDeviation="3.5" flood-color="#000000" flood-opacity="0.16" />
-        </filter>
-        <style>
-          .abyss-glyph, .abyss-text {
-            fill: #05070a;
-          }
-          .abyss-text {
-            font-family: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            font-size: 710px;
-            font-weight: 900;
-            letter-spacing: 20px;
-          }
-          @media (prefers-color-scheme: dark) {
-            .abyss-glyph, .abyss-text {
-              fill: #FDFCFD;
-            }
-          }
-        </style>
-      </defs>
-      <g filter="url(#soft-shadow)">
-        <g class="abyss-glyph">
-          <polygon points="550.0,313.5 702.0,313.5 975.0,939.5 820.0,939.5 626.0,468.0 425.0,939.5 270.0,939.5" />
-          <circle cx="626.0" cy="745.0" r="70.0" />
-        </g>
-        <text x="1060" y="939.5" class="abyss-text">BYSS</text>
-      </g>
-    </svg>
-  </a>
-  <nav class="topbar-nav">
-    <a href="/abyss/docs/" class="topbar-link">Docs</a>
-    <a href="/abyss/playground/" class="topbar-link">Playground</a>
-    <a href="https://github.com/jhosein58/abyss" target="_blank" rel="noopener noreferrer" class="topbar-link" aria-label="GitHub Repository">
-      <svg class="topbar-github-icon" viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
-        <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
-      </svg>
-      <span>GitHub</span>
-    </a>
-  </nav>
-</header>
-
-<svg class="svg-defs" aria-hidden="true">
-  <defs>
-    <filter id="abyss-current-filter" x="-25%" y="-40%" width="150%" height="180%" color-interpolation-filters="sRGB">
-      <feTurbulence id="current-turbulence" type="fractalNoise" baseFrequency="0.012 0.048" numOctaves="2" seed="4" result="noise" />
-      <feDisplacementMap id="current-displacement" in="SourceGraphic" in2="noise" scale="0" xChannelSelector="R" yChannelSelector="G" />
-    </filter>
-  </defs>
-</svg>
-
-<div class="depth-track-system">
-  <div class="depth-gauge-wrap">
-    <div class="depth-rail">
-      <div class="depth-rail-fill" id="depth-bar"></div>
-    </div>
-    <div class="depth-ticks" id="depth-ticks" aria-hidden="true"></div>
-    <div class="depth-endpoint" id="depth-endpoint" title="Descend to ABYSS" aria-label="Descend to ABYSS">
-      <span class="depth-descend-label" id="descend-label">descend</span>
-      <div class="depth-dot" id="depth-dot"></div>
-    </div>
-  </div>
-</div>
-
-<div class="depth-tracker" id="depth-tracker">
-  <div class="depth-data">
-    <div class="depth-readout-row">
-      <span class="depth-pressure" id="pressure-display">1.0 ATM</span>
-      <span class="depth-meters" id="depth-display">0m</span>
-    </div>
-    <div class="depth-zone" id="zone-display">SUNLIGHT ZONE</div>
-  </div>
-  <div class="depth-reticle" aria-hidden="true"></div>
-</div>
-
-<section class="stage-section" id="stage-0" data-depth="0" data-zone="SUNLIGHT ZONE">
-  <div class="container">
-    <div class="depth-tag">Depth 0m &bull; Sunlight Zone</div>
-    <h2 class="stage-title">Pure, Unadorned Code.</h2>
-    <p class="stage-desc">
-      No ceremony, no boilerplate headers, no preprocessor indirection. Just deterministic syntax that translates directly to mechanical execution.
-    </p>
-
-    <div class="code-box">
-      <button class="run-code-btn" data-target="code-0" title="Run code">
-        <svg viewBox="0 0 24 24" width="11" height="11" fill="currentColor">
-          <polygon points="6 4 20 12 6 20 6 4"></polygon>
+  <header class="fixed top-0 left-0 right-0 z-30 bg-background/90 backdrop-blur-md">
+    <div class="max-w-5xl mx-auto px-5 sm:px-gutter-lg md:px-gutter-xl h-14 sm:h-16 flex items-center justify-between gap-gutter-md">
+      <a href="#stage-0" class="flex items-center text-primary hover:text-primary-container transition-colors duration-state-change shrink-0" aria-label="ABYSS Home">
+        <svg class="h-5 sm:h-6 w-auto block" viewBox="230 250 2850 740" aria-hidden="true">
+          <g fill="currentColor">
+            <polygon points="550.0,313.5 702.0,313.5 975.0,939.5 820.0,939.5 626.0,468.0 425.0,939.5 270.0,939.5"></polygon>
+            <circle cx="626.0" cy="745.0" r="70.0"></circle>
+            <text x="1060" y="939.5" font-family="'Syne', sans-serif" font-size="680" font-weight="700" letter-spacing="18">BYSS</text>
+          </g>
         </svg>
-        <span>Run</span>
-      </button>
-      <div class="code-content">
-<pre><code id="code-0" data-lang="abyss">import std.io: print
+      </a>
+      <nav aria-label="Primary navigation" class="flex items-center gap-3.5 sm:gap-gutter-lg">
+        <a href="/abyss/docs/" class="font-code text-label-sm text-on-surface hover:text-primary transition-colors duration-state-change">Docs</a>
+        <a href="/abyss/playground/" class="font-code text-label-sm text-on-surface hover:text-primary transition-colors duration-state-change">Playground</a>
+        <a href="https://github.com/abysslang/abyss" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1.5 px-3 sm:px-gutter-md py-1.5 rounded-md bg-surface-container-low border border-outline-variant font-code text-label-sm text-on-surface hover:border-primary hover:text-primary transition-colors duration-state-change">
+          <svg class="w-3.5 h-3.5 shrink-0" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+            <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8Z"></path>
+          </svg>
+          <span>GitHub</span>
+        </a>
+      </nav>
+    </div>
+  </header>
 
-main :: fn() {
-    print("Hello from the deep!\n")
-}</code></pre>
+  <aside aria-label="Depth gauge navigation" class="fixed top-1/2 -translate-y-1/2 right-3 md:right-5 lg:right-6 z-40 hidden md:flex flex-col items-end select-none pointer-events-none">
+    <div class="relative h-36 lg:h-40 w-5 flex justify-end items-center">
+      <div id="depth-ticks" class="relative w-5 h-full pointer-events-none" aria-hidden="true"></div>
+      <button id="depth-endpoint" type="button" title="Descend to THE ABYSS (-∞)" aria-label="Descend to THE ABYSS" class="pointer-events-auto absolute right-0 -bottom-6 flex items-center justify-end group cursor-pointer transition-opacity duration-300">
+        <span id="descend-label" class="font-code text-label-sm tracking-widest uppercase text-on-surface-variant group-hover:text-primary transition-all duration-300 whitespace-nowrap">descend</span>
+      </button>
+    </div>
+  </aside>
+
+  <div id="depth-tracker" class="fixed right-10 md:right-12 lg:right-14 top-1/2 -translate-y-1/2 z-40 hidden md:flex items-center gap-2 pointer-events-none font-code" aria-live="polite">
+    <div class="flex flex-col items-end text-right leading-none bg-background px-1 py-0.5">
+      <div class="flex items-baseline gap-1.5">
+        <span id="pressure-display" class="font-code text-[11px] lg:text-label-sm text-on-surface-variant tabular-nums">1.0 ATM</span>
+        <span id="depth-display" class="font-code text-[13px] lg:text-label-lg text-primary tabular-nums">0m</span>
       </div>
-      <div class="code-output" id="output-code-0" hidden>
-        <div class="output-header">
-          <span class="output-label">OUTPUT</span>
-          <span class="output-time" id="time-code-0"></span>
+      <div id="zone-display" class="font-code text-[10px] lg:text-label-sm tracking-widest text-on-surface-variant uppercase mt-0.5 whitespace-nowrap">SUNLIGHT ZONE</div>
+    </div>
+    <div class="w-2.5 h-px bg-primary shrink-0" aria-hidden="true"></div>
+  </div>
+
+  <main class="overflow-x-clip">
+    <div class="md:pr-44 lg:pr-52 xl:pr-44 2xl:pr-28">
+      <section id="stage-0" data-depth="0" data-zone="SUNLIGHT ZONE" class="relative min-h-screen min-h-[100dvh] flex flex-col justify-center max-w-4xl mx-auto px-5 sm:px-gutter-lg md:px-gutter-xl pt-20 pb-10 sm:pt-24 sm:pb-12 lg:pt-28 lg:pb-14">
+        <div class="pointer-events-none absolute top-20 right-4 sm:right-8 w-56 h-56 sm:w-72 sm:h-72 bg-dot-matrix" aria-hidden="true"></div>
+
+        <div class="relative z-10 mb-gutter-md lg:mb-gutter-lg">
+          <span class="font-code text-label-sm tracking-widest text-primary uppercase tabular-nums">
+            0m &bull; Sunlight Zone
+          </span>
         </div>
-        <pre class="output-text" id="text-code-0"></pre>
-      </div>
-    </div>
 
-    <div class="scroll-prompt">
-      <span class="scroll-arrow">&darr;</span>
-      <span>Scroll to descend into the deep</span>
-    </div>
-  </div>
-</section>
+        <h1 class="relative z-10 font-display text-[2rem] leading-[1.14] tracking-[-0.75px] font-bold sm:text-[2.75rem] sm:leading-[1.1] lg:text-[3.5rem] lg:leading-[1.08] xl:text-display-lg text-grad-mono text-balance mb-gutter-sm sm:mb-gutter-md max-w-3xl">
+          Most languages live at the surface.
+        </h1>
+        <p class="relative z-10 font-body text-body-md sm:text-body-lg text-on-surface max-w-prose text-pretty mb-gutter-lg lg:mb-gutter-xl">
+          Garbage collectors, runtime reflection, and hidden allocations trade determinism for convenience. Every layer of abstraction adds latency you cannot see and memory you do not control.
+        </p>
 
-<section class="stage-section" id="stage-200" data-depth="-200" data-zone="TWILIGHT ZONE">
-  <div class="container">
-    <div class="depth-tag">Depth -200m &bull; Twilight Zone</div>
-    <h2 class="stage-title">Declaration-First Syntax.</h2>
-    <p class="stage-desc">
-      Designed for rapid visual parsing. Ergonomics inspired by Odin and Jai combine with orthogonal grammar rules, ensuring the compiler and human reader understand every construct without ambiguity.
-    </p>
+        <div class="relative z-10 overflow-hidden py-2">
+          <div class="flex items-stretch gap-gutter-sm">
+            <div class="mono-grad-box rounded-lg p-gutter-md w-44 sm:w-52 shrink-0 flex flex-col gap-gutter-xs">
+              <span class="font-code text-label-sm tracking-widest text-on-surface-variant uppercase">01 // Latency</span>
+              <h2 class="font-title text-title-lg text-primary">GC Pauses</h2>
+              <p class="font-body text-body-md text-on-surface-variant text-pretty">
+                Stop-the-world collectors and hidden hooks stall execution when timing matters.
+              </p>
+            </div>
 
-    <div class="spec-pills">
-      <span class="pill">Orthogonal Grammar</span>
-      <span class="pill">Method Receivers (self &Self)</span>
-      <span class="pill">Struct Literals</span>
-      <span class="pill">Implicit Return</span>
-    </div>
+            <div class="mono-grad-box rounded-lg p-gutter-md w-44 sm:w-52 shrink-0 flex flex-col gap-gutter-xs origin-left" style="transform: scale(0.95); filter: blur(0.6px);">
+              <span class="font-code text-label-sm tracking-widest text-on-surface-variant uppercase">02 // Tooling</span>
+              <h2 class="font-title text-title-lg text-primary">Heavy Builds</h2>
+              <p class="font-body text-body-md text-on-surface-variant text-pretty">
+                Pointer-chasing ASTs burn memory just to type-check everyday code.
+              </p>
+            </div>
 
-    <div class="code-box">
-      <button class="run-code-btn" data-target="code-200" title="Run code">
-        <svg viewBox="0 0 24 24" width="11" height="11" fill="currentColor">
-          <polygon points="6 4 20 12 6 20 6 4"></polygon>
-        </svg>
-        <span>Run</span>
-      </button>
-      <div class="code-content">
-<pre><code id="code-200" data-lang="abyss">import std.io: print
+            <div class="mono-grad-box rounded-lg p-gutter-md w-44 sm:w-52 shrink-0 flex flex-col gap-gutter-xs origin-left" style="transform: scale(0.90); filter: blur(1.6px);" aria-hidden="true">
+              <span class="font-code text-label-sm tracking-widest text-on-surface-variant uppercase">03 // Interop</span>
+              <h2 class="font-title text-title-lg text-primary">FFI Friction</h2>
+              <p class="font-body text-body-md text-on-surface-variant text-pretty">
+                Boundary glue and marshaling wrappers slow down every native C call.
+              </p>
+            </div>
+
+            <div class="mono-grad-box rounded-lg p-gutter-md w-44 sm:w-52 shrink-0 flex flex-col gap-gutter-xs origin-left" style="transform: scale(0.84); filter: blur(3px);" aria-hidden="true">
+              <span class="font-code text-label-sm tracking-widest text-on-surface-variant uppercase">04 // Memory</span>
+              <h2 class="font-title text-title-lg text-primary">Silent Heap</h2>
+              <p class="font-body text-body-md text-on-surface-variant text-pretty">
+                Implicit boxing and closures scatter allocations across hot loops.
+              </p>
+            </div>
+
+            <div class="mono-grad-box rounded-lg p-gutter-md w-44 sm:w-52 shrink-0 flex flex-col gap-gutter-xs origin-left" style="transform: scale(0.78); filter: blur(5px);" aria-hidden="true">
+              <span class="font-code text-label-sm tracking-widest text-on-surface-variant uppercase">05 // Control</span>
+              <h2 class="font-title text-title-lg text-primary">Unwinding</h2>
+              <p class="font-body text-body-md text-on-surface-variant text-pretty">
+                Hidden stack frames obscure failure paths and bloat binaries.
+              </p>
+            </div>
+
+            <div class="mono-grad-box rounded-lg p-gutter-md w-44 sm:w-52 shrink-0 flex flex-col gap-gutter-xs origin-left" style="transform: scale(0.72); filter: blur(7.5px);" aria-hidden="true">
+              <span class="font-code text-label-sm tracking-widest text-on-surface-variant uppercase">06 // Overhead</span>
+              <h2 class="font-title text-title-lg text-primary">Reflection</h2>
+              <p class="font-body text-body-md text-on-surface-variant text-pretty">
+                Runtime metadata ships dead weight into production builds.
+              </p>
+            </div>
+          </div>
+
+          <div class="pointer-events-none absolute inset-0 z-20" style="background: linear-gradient(to right, transparent 18%, rgba(0, 0, 0, 0.42) 44%, rgba(0, 0, 0, 0.84) 72%, #000000 95%);" aria-hidden="true"></div>
+        </div>
+
+        <div class="relative z-10 mt-8 sm:mt-10 lg:mt-12 flex items-center gap-gutter-sm font-code text-label-sm tracking-widest text-on-surface uppercase">
+          <span class="material-symbols-outlined text-title-lg text-primary" aria-hidden="true">south</span>
+          <span>Scroll to descend</span>
+        </div>
+      </section>
+
+      <section id="stage-200" data-depth="-200" data-zone="TWILIGHT ZONE" class="relative min-h-screen min-h-[100dvh] flex flex-col justify-center max-w-4xl mx-auto px-5 sm:px-gutter-lg md:px-gutter-xl py-16 md:py-20 lg:py-section">
+        <div class="pointer-events-none absolute bottom-16 left-4 sm:left-6 w-52 h-52 sm:w-64 sm:h-64 bg-grid-micro" aria-hidden="true"></div>
+
+        <div class="relative z-10 mb-gutter-md">
+          <span class="font-code text-label-sm tracking-widest text-primary uppercase tabular-nums">
+            -200m &bull; Twilight Zone
+          </span>
+        </div>
+
+        <h2 class="relative z-10 font-headline text-display-md-mobile sm:text-[2.25rem] sm:leading-[1.15] lg:text-display-md text-grad-mono text-balance mb-gutter-sm sm:mb-gutter-md">
+          Declaration-First Syntax.
+        </h2>
+        <p class="relative z-10 font-body text-body-md sm:text-body-lg text-on-surface max-w-prose text-pretty mb-gutter-lg lg:mb-gutter-xl">
+          Orthogonal grammar rules and explicit method receivers ensure zero ambiguity between declarations and expressions.
+        </p>
+
+        <div class="code-box mono-grad-box rounded-lg overflow-hidden">
+          <button type="button" class="run-code-btn absolute top-3 right-3 sm:top-3.5 sm:right-3.5 z-20 w-8 h-8 rounded-full bg-primary text-on-primary hover:bg-primary-container disabled:opacity-70 flex items-center justify-center transition-colors duration-state-change cursor-pointer" data-target="code-200" aria-label="Run code" title="Run (Ctrl+Enter)">
+            <span class="material-symbols-outlined text-title-lg" style="font-variation-settings: 'FILL' 1;" aria-hidden="true">play_arrow</span>
+          </button>
+          <div class="relative p-4 sm:p-gutter-lg pr-12 sm:pr-14 font-code text-[13px] sm:text-code-md text-on-surface overflow-x-auto">
+            <pre class="code-fade-mask"><code id="code-200" data-lang="abyss">import std.io: print
 
 Point :: struct {
     x, y i32
 
-    dist_sq :: fn(self &Self) i32 {
+    dist_sq :: fn(self &amp;Self) i32 {
         self.x * self.x + self.y * self.y
-    }
-}
-
-Rect :: struct {
-    w, h i32
-
-    area :: fn(self &Self) i32 {
-        self.w * self.h
-    }
-
-    scale :: fn(self &Self, factor i32) i32 {
-        self.w * factor
     }
 }
 
 main :: fn() {
     p: Point = .{ x: 3, y: 4 }
-    r: Rect = .{ w: 10, h: 20 }
-
-    print("Distance squared: ")
     print(p.dist_sq())
-    print("\nArea: ")
-    print(r.area())
-    print("\n")
 }</code></pre>
-      </div>
-      <div class="code-output" id="output-code-200" hidden>
-        <div class="output-header">
-          <span class="output-label">OUTPUT</span>
-          <span class="output-time" id="time-code-200"></span>
+          </div>
+          <div id="output-code-200" class="hidden border-t border-outline-variant bg-surface-container-lowest px-4 sm:px-gutter-lg py-3 sm:py-gutter-md">
+            <div class="flex items-center justify-between gap-2 mb-1.5">
+              <span class="font-code text-[10px] tracking-[0.18em] text-on-surface-variant uppercase">Output</span>
+              <span id="time-code-200" class="font-code text-[10px] text-on-surface-variant tabular-nums"></span>
+            </div>
+            <pre id="text-code-200" class="font-code text-[13px] sm:text-code-md text-primary whitespace-pre-wrap break-words"></pre>
+          </div>
         </div>
-        <pre class="output-text" id="text-code-200"></pre>
-      </div>
-    </div>
-  </div>
-</section>
+      </section>
 
-<section class="stage-section" id="stage-4000" data-depth="-4000" data-zone="MIDNIGHT ZONE">
-  <div class="container">
-    <div class="depth-tag">Depth -4,000m &bull; Midnight Zone</div>
-    <h2 class="stage-title">Compile-Time Evaluation & Types.</h2>
-    <p class="stage-desc">
-      Run arbitrary logic during compilation using the integrated Bytecode VM via cmpt blocks. Types are first-class values that can be passed to and returned from functions, eliminating template metaprogramming complexity.
-    </p>
-
-    <div class="spec-pills">
-      <span class="pill">Comptime (cmpt)</span>
-      <span class="pill">First-Class Types</span>
-      <span class="pill">Bytecode VM</span>
-      <span class="pill">Zero Garbage Collector</span>
-    </div>
-
-    <div class="code-box">
-      <button class="run-code-btn" data-target="code-4000" title="Run code">
-        <svg viewBox="0 0 24 24" width="11" height="11" fill="currentColor">
-          <polygon points="6 4 20 12 6 20 6 4"></polygon>
-        </svg>
-        <span>Run</span>
-      </button>
-      <div class="code-content">
-<pre><code id="code-4000" data-lang="abyss">import std.io: print
-
-TypeByCond :: fn(cond bool) type {
-    if cond { i32 } else { f32 }
-}
-
-main :: fn() {
-    val := cmpt {
-        base := 20
-        base * 2 + 2
-    }
-    print("Compile-time evaluated: ")
-    print(val)
-    print("\n")
-
-    x: TypeByCond(true) = 100
-    print("Computed type value: ")
-    print(x)
-    print("\n")
-}</code></pre>
-      </div>
-      <div class="code-output" id="output-code-4000" hidden>
-        <div class="output-header">
-          <span class="output-label">OUTPUT</span>
-          <span class="output-time" id="time-code-4000"></span>
+      <section id="stage-4000" data-depth="-4000" data-zone="MIDNIGHT ZONE" class="relative min-h-screen min-h-[100dvh] flex flex-col justify-center max-w-4xl mx-auto px-5 sm:px-gutter-lg md:px-gutter-xl py-16 md:py-20 lg:py-section">
+        <div class="relative z-10 mb-gutter-md">
+          <span class="font-code text-label-sm tracking-widest text-primary uppercase tabular-nums">
+            -4,000m &bull; Midnight Zone
+          </span>
         </div>
-        <pre class="output-text" id="text-code-4000"></pre>
-      </div>
-    </div>
-  </div>
-</section>
 
-<section class="stage-section" id="stage-6000" data-depth="-6000" data-zone="ABYSSAL ZONE">
-  <div class="container">
-    <div class="depth-tag">Depth -6,000m &bull; Abyssal Zone</div>
-    <h2 class="stage-title">Data-Oriented Compiler Architecture.</h2>
-    <p class="stage-desc">
-      Pointer-heavy AST graphs are banished. The 100% self-hosted compiler stores syntax nodes in flat arena tables identified by dense numeric HirId and TypeId indices, maximizing CPU L1 cache locality, incremental throughput, and emitting deterministic ISO C99.
-    </p>
+        <h2 class="relative z-10 font-headline text-display-md-mobile sm:text-[2.25rem] sm:leading-[1.15] lg:text-display-md text-grad-mono text-balance mb-gutter-sm sm:mb-gutter-md">
+          Pressure turns syntax into truth.
+        </h2>
+        <p class="relative z-10 font-body text-body-md sm:text-body-lg text-on-surface max-w-prose text-pretty mb-gutter-lg lg:mb-gutter-xl">
+          Every stage runs in lockstep over a single arena: source fractures into tokens, builds a flat syntax tree, unifies type constraints, and emits <code class="font-code text-primary">AIR</code> line by line.
+        </p>
 
-    <div class="spec-pills">
-      <span class="pill">Data-Oriented (DOP)</span>
-      <span class="pill">Dense HirId Tables</span>
-      <span class="pill">Deterministic ISO C99</span>
-      <span class="pill">Zero-Cost C ABI</span>
-    </div>
+        <div class="relative z-10 mono-grad-box rounded-lg p-3 sm:p-gutter-md md:p-gutter-lg overflow-x-auto">
+          <svg class="min-w-[540px] sm:min-w-0 w-full h-auto block" viewBox="12 0 790 276" role="img" aria-label="Minimal compiler schematic connecting fractured source tokens with type unification arrows directly to AIR output">
+            <defs>
+              <marker id="air-arrow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+                <path d="M 0 1 L 7 4 L 0 7 z" fill="#9E9E9E"></path>
+              </marker>
+              <marker id="air-arrow-bright" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+                <path d="M 0 1 L 7 4 L 0 7 z" fill="#FFFFFF"></path>
+              </marker>
+            </defs>
 
-    <div class="code-box">
-      <button class="run-code-btn" data-target="code-6000" title="Run code">
-        <svg viewBox="0 0 24 24" width="11" height="11" fill="currentColor">
-          <polygon points="6 4 20 12 6 20 6 4"></polygon>
-        </svg>
-        <span>Run</span>
-      </button>
-      <div class="code-content">
-<pre><code id="code-6000" data-lang="abyss">import std.io: print
+            <text x="36" y="28" fill="#737373" font-family="'Source Code Pro', monospace" font-size="10" letter-spacing="2">SOURCE</text>
+            <text x="510" y="28" fill="#FFFFFF" font-family="'Source Code Pro', monospace" font-size="10" letter-spacing="2">AIR</text>
 
-HirId    :: u32
-TyId     :: u32
-SymbolId :: u32
+            <g font-family="'Source Code Pro', monospace" font-size="16">
+              <text x="36" y="72"><tspan fill="#FFFFFF">main</tspan> <tspan fill="#737373">::</tspan> <tspan fill="#FFFFFF">fn</tspan><tspan fill="#737373">() {</tspan></text>
+              <text x="64" y="124"><tspan fill="#FFFFFF">x</tspan> <tspan fill="#737373">:=</tspan> <tspan fill="#FFFFFF">40</tspan></text>
+              <text x="64" y="178"><tspan fill="#FFFFFF">print</tspan><tspan fill="#737373">(</tspan><tspan fill="#FFFFFF">x</tspan> <tspan fill="#737373">+</tspan> <tspan fill="#FFFFFF">2</tspan><tspan fill="#737373">)</tspan></text>
+              <text x="36" y="232" fill="#737373">}</text>
+            </g>
 
-HirNode :: struct {
-    id     HirId
-    ty     TyId
-    symbol SymbolId
-}
+            <path d="M 69 108 Q 86 92 146 92" fill="none" stroke="#9E9E9E" stroke-width="1" marker-end="url(#air-arrow)"></path>
+            <text x="156" y="96" fill="#FFFFFF" font-family="'Source Code Pro', monospace" font-size="12">T</text>
 
-Compiler :: struct {
-    count u32
+            <path d="M 165 164 Q 188 146 244 146" fill="none" stroke="#9E9E9E" stroke-width="1" marker-end="url(#air-arrow)"></path>
+            <text x="252" y="150" fill="#FFFFFF" font-family="'Source Code Pro', monospace" font-size="12">i32</text>
 
-    compile_node :: fn(self &Self, node &HirNode) u32 {
-        node.id + node.ty
-    }
-}
+            <path d="M 121 190 L 121 195 L 170 195 L 170 190" fill="none" stroke="#525252" stroke-width="1"></path>
+            <path d="M 145.5 195 L 145.5 220" fill="none" stroke="#FFFFFF" stroke-opacity="0.8" stroke-width="1.1" marker-end="url(#air-arrow-bright)"></path>
+            <text x="145.5" y="238" text-anchor="middle" fill="#FFFFFF" font-family="'Source Code Pro', monospace" font-size="12">T ≡ i32</text>
 
-main :: fn() {
-    c: Compiler = .{ count: 1 }
-    root: HirNode = .{ id: 42, ty: 1, symbol: 100 }
-    status := c.compile_node(&root)
-    print("Compilation finished. HIR node sum: ")
-    print(status)
-    print("\n")
-}</code></pre>
-      </div>
-      <div class="code-output" id="output-code-6000" hidden>
-        <div class="output-header">
-          <span class="output-label">OUTPUT</span>
-          <span class="output-time" id="time-code-6000"></span>
+            <path d="M 176 92 C 310 92, 360 88, 494 88" fill="none" stroke="#404040" stroke-width="1" stroke-dasharray="3 3" marker-end="url(#air-arrow)"></path>
+            <path d="M 284 146 C 370 146, 405 128, 494 128" fill="none" stroke="#525252" stroke-width="1" stroke-dasharray="3 3" marker-end="url(#air-arrow)"></path>
+            <path d="M 184 234 C 330 234, 385 168, 494 168" fill="none" stroke="#FFFFFF" stroke-opacity="0.6" stroke-width="1.1" marker-end="url(#air-arrow-bright)"></path>
+
+            <line x1="504" y1="68" x2="504" y2="242" stroke="#262626" stroke-width="1"></line>
+            <g font-family="'Source Code Pro', monospace" font-size="13">
+              <text x="520" y="92" fill="#737373">%0 = <tspan fill="#FFFFFF">const.i32 40</tspan></text>
+              <text x="520" y="132" fill="#737373">%1 = <tspan fill="#FFFFFF">const.i32 2</tspan></text>
+              <text x="520" y="172" fill="#737373">%2 = <tspan fill="#FFFFFF">add.i32 %0, %1</tspan></text>
+              <text x="520" y="212" fill="#737373">%3 = <tspan fill="#FFFFFF">call print, %2</tspan></text>
+              <text x="520" y="242" fill="#737373" font-size="11">ret void</text>
+            </g>
+          </svg>
         </div>
-        <pre class="output-text" id="text-code-6000"></pre>
+      </section>
+
+      <section id="stage-6000" data-depth="-6000" data-zone="ABYSSAL ZONE" class="relative min-h-screen min-h-[100dvh] flex flex-col justify-center max-w-4xl mx-auto px-5 sm:px-gutter-lg md:px-gutter-xl py-16 md:py-20 lg:py-section">
+        <div class="pointer-events-none absolute bottom-20 right-4 sm:right-12 w-56 h-44 sm:w-72 sm:h-56 bg-dot-matrix" aria-hidden="true"></div>
+
+        <div class="relative z-10 mb-gutter-md">
+          <span class="font-code text-label-sm tracking-widest text-primary uppercase tabular-nums">
+            -6,000m &bull; Abyssal Zone
+          </span>
+        </div>
+
+        <h2 class="relative z-10 font-headline text-display-md-mobile sm:text-[2.25rem] sm:leading-[1.15] lg:text-display-md text-grad-mono text-balance mb-gutter-sm sm:mb-gutter-md">
+          No dead weight survives the deep.
+        </h2>
+        <p class="relative z-10 font-body text-body-md sm:text-body-lg text-on-surface max-w-prose text-pretty mb-gutter-lg lg:mb-gutter-xl">
+          <code class="font-code text-primary">HIR</code> forks cleanly at the floor: a direct fast lowerer emits <code class="font-code text-primary">Bytecode VM</code> at light speed, while laying the <code class="font-code text-primary">Keel</code>—our <code class="font-code text-primary">SSA</code> backend—runs <code class="font-code text-primary">DCE</code>, <code class="font-code text-primary">CF</code>, and <code class="font-code text-primary">CFG</code> passes before emitting native <code class="font-code text-primary">x86_64</code>, <code class="font-code text-primary">ELF</code>, or symmetric <code class="font-code text-primary">ISO C99</code>.
+        </p>
+
+        <div class="relative z-10 mono-grad-box rounded-lg p-3 sm:p-gutter-md md:p-gutter-lg overflow-x-auto">
+          <svg class="min-w-[540px] sm:min-w-0 w-full h-auto block" viewBox="0 0 800 228" role="img" aria-label="Compiler backend diagram: HIR lowers directly via fast lowerer to Bytecode VM, or enters the Keel SSA backend for DCE, CF, and CFG optimization before emitting x86_64, ELF, and ISO C99">
+            <defs>
+              <marker id="abyss-arrow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+                <path d="M 0 1 L 7 4 L 0 7 z" fill="#737373"></path>
+              </marker>
+              <marker id="abyss-arrow-bright" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+                <path d="M 0 1 L 7 4 L 0 7 z" fill="#FFFFFF"></path>
+              </marker>
+            </defs>
+
+            <circle cx="42" cy="108" r="3" fill="#FFFFFF"></circle>
+            <text x="54" y="113" fill="#FFFFFF" font-family="'Source Code Pro', monospace" font-size="15" font-weight="600">HIR</text>
+
+            <path d="M 92 100 C 135 52, 165 52, 220 52 L 598 52" fill="none" stroke="#FFFFFF" stroke-opacity="0.75" stroke-width="1.2" marker-end="url(#abyss-arrow-bright)"></path>
+            <text x="352" y="40" text-anchor="middle" fill="#9E9E9E" font-family="'Source Code Pro', monospace" font-size="11" letter-spacing="1">FAST LOWERER</text>
+            <text x="612" y="56" fill="#FFFFFF" font-family="'Source Code Pro', monospace" font-size="13">Bytecode VM</text>
+
+            <path d="M 92 116 C 125 152, 140 152, 174 152" fill="none" stroke="#737373" stroke-width="1" marker-end="url(#abyss-arrow)"></path>
+
+            <rect x="182" y="96" width="340" height="108" rx="8" fill="#050505" stroke="#2A2A2A" stroke-width="1"></rect>
+            <text x="200" y="118" fill="#FFFFFF" font-family="'Source Code Pro', monospace" font-size="10" letter-spacing="2">KEEL</text>
+
+            <g font-family="'Source Code Pro', monospace">
+              <text x="200" y="158" fill="#FFFFFF" font-size="13">SSA</text>
+              <line x1="234" y1="154" x2="274" y2="154" stroke="#525252" stroke-width="1" marker-end="url(#abyss-arrow)"></line>
+
+              <text x="288" y="158" fill="#FFFFFF" font-size="12">DCE</text>
+              <circle cx="332" cy="154" r="1.5" fill="#525252"></circle>
+              <text x="350" y="158" fill="#FFFFFF" font-size="12">CF</text>
+              <circle cx="386" cy="154" r="1.5" fill="#525252"></circle>
+              <text x="404" y="158" fill="#FFFFFF" font-size="12">CFG</text>
+            </g>
+
+            <path d="M 522 152 C 562 152, 566 112, 598 112" fill="none" stroke="#FFFFFF" stroke-opacity="0.7" stroke-width="1.1" marker-end="url(#abyss-arrow-bright)"></path>
+            <path d="M 522 152 L 598 152" fill="none" stroke="#737373" stroke-width="1" marker-end="url(#abyss-arrow)"></path>
+            <path d="M 522 152 C 562 152, 566 192, 598 192" fill="none" stroke="#FFFFFF" stroke-opacity="0.7" stroke-width="1.1" marker-end="url(#abyss-arrow-bright)"></path>
+
+            <g font-family="'Source Code Pro', monospace" font-size="13">
+              <text x="612" y="116" fill="#FFFFFF">x86_64</text>
+              <text x="612" y="156" fill="#9E9E9E">ELF</text>
+              <text x="612" y="196" fill="#FFFFFF">ISO C99 <tspan fill="#737373" font-size="11">  1:1 ABI</tspan></text>
+            </g>
+          </svg>
+        </div>
+      </section>
+
+      <section id="stage-void" data-depth="-11000" data-zone="CHALLENGER DEEP" class="min-h-[38vh] min-h-[38dvh] md:min-h-[45vh]" aria-hidden="true"></section>
+    </div>
+
+    <section id="stage-revelation" data-depth="-Infinity" data-zone="THE ABYSS" class="relative min-h-screen min-h-[100dvh] w-full flex flex-col items-center justify-center text-center px-5 sm:px-gutter-lg md:px-gutter-xl py-16 md:py-section overflow-hidden">
+      <div class="pointer-events-none absolute inset-0 bg-grid-micro" aria-hidden="true"></div>
+      <div class="pointer-events-none absolute inset-0 grid-shadow-eclipse" aria-hidden="true"></div>
+      <div class="pointer-events-none absolute inset-0 abyss-soft-glow" aria-hidden="true"></div>
+
+      <div id="abyss-center-cluster" class="relative z-10 w-full max-w-md sm:w-auto sm:max-w-none inline-flex flex-col items-stretch gap-gutter-xl transition-transform duration-200 ease-out">
+        <div class="abyss-wordmark flex items-baseline justify-center text-grad-abyss" aria-label="ABYSS">
+          <svg class="abyss-wordmark-svg shrink-0" viewBox="270 313.5 705 626" aria-hidden="true">
+            <g fill="currentColor">
+              <polygon points="550.0,313.5 702.0,313.5 975.0,939.5 820.0,939.5 626.0,468.0 425.0,939.5 270.0,939.5"></polygon>
+              <circle cx="626.0" cy="745.0" r="70.0"></circle>
+            </g>
+          </svg>
+          <h2 class="font-display abyss-wordmark-text tracking-tight">
+            BYSS
+          </h2>
+        </div>
+
+        <div class="w-full flex flex-col sm:grid sm:grid-cols-2 gap-gutter-md">
+          <a href="/abyss/playground/" class="w-full inline-flex items-center justify-center px-gutter-lg py-3 rounded-md bg-primary text-on-primary font-label text-label-lg hover:bg-primary-container focus-visible:outline focus-visible:outline-1 focus-visible:outline-primary transition-colors duration-state-change ease-state-change whitespace-nowrap">
+            <span>Open Playground</span>
+          </a>
+
+          <a href="/abyss/docs/" class="w-full inline-flex items-center justify-center px-gutter-lg py-3 rounded-md bg-surface border border-outline-variant text-on-surface font-label text-label-lg hover:border-primary hover:text-primary focus-visible:outline focus-visible:outline-1 focus-visible:outline-primary transition-colors duration-state-change ease-state-change whitespace-nowrap">
+            <span>Read Documentation</span>
+          </a>
+        </div>
       </div>
-    </div>
-  </div>
-</section>
+    </section>
 
-<div class="the-void" id="stage-void" data-depth="-11000" data-zone="CHALLENGER DEEP"></div>
+    <div id="stage-sub-abyss" class="hidden min-h-[75vh] min-h-[75dvh] w-full bg-background" aria-hidden="true"></div>
 
-<div class="revelation-track" id="stage-revelation-track">
-  <section class="revelation" id="stage-revelation" data-depth="-Infinity" data-zone="THE ABYSS">
-    <div class="revelation-center">
-      <h1 class="abyss-main-title" id="abyss-title" aria-label="ABYSS">
-        <span class="abyss-char">A</span>
-        <span class="abyss-char">B</span>
-        <span class="abyss-char">Y</span>
-        <span class="abyss-char">S</span>
-        <span class="abyss-char">S</span>
-      </h1>
-      <p class="abyss-sub-title" id="abyss-subtitle">programming language</p>
-
-      <div class="revelation-actions" id="revelation-actions">
-        <a href="/abyss/docs/" class="revelation-link">docs</a>
-        <a href="/abyss/playground/" class="revelation-link">playground</a>
-        <a href="https://github.com/jhosein58/abyss" target="_blank" rel="noopener noreferrer" class="revelation-link">github</a>
+    <section id="stage-easter-egg" class="hidden relative w-full bg-background overflow-hidden" aria-label="Hidden upside-down world">
+      <div class="w-full easter-egg-void-fade">
+        <img src="zombie.jpg" alt="Upside-down subterranean world" class="w-full h-auto block object-cover select-none" />
       </div>
-    </div>
+    </section>
+  </main>
 
-    <div class="bottom-nav" id="bottom-nav">
-      <a href="#stage-0">0m</a>
-      <span>&bull;</span>
-      <a href="/">root</a>
-      <span>&bull;</span>
-      <a href="https://github.com/jhosein58/abyss/blob/main/LICENSE" target="_blank" rel="noopener noreferrer">mit</a>
-    </div>
-  </section>
-</div>
+  <div id="android-overscroll-glow" class="android-overscroll-glow" aria-hidden="true"></div>
 
-<script>
-const depthDisplay = document.getElementById('depth-display');
-const pressureDisplay = document.getElementById('pressure-display');
-const zoneDisplay = document.getElementById('zone-display');
-const depthBar = document.getElementById('depth-bar');
-const depthTracker = document.getElementById('depth-tracker');
-const depthDot = document.getElementById('depth-dot');
-const depthRail = document.querySelector('.depth-rail');
-const topbar = document.getElementById('topbar');
-const descendLabel = document.getElementById('descend-label');
-const depthEndpoint = document.getElementById('depth-endpoint');
-const depthTicksContainer = document.getElementById('depth-ticks');
+  <script>
+    (function () {
+      const depthDisplay = document.getElementById('depth-display');
+      const pressureDisplay = document.getElementById('pressure-display');
+      const zoneDisplay = document.getElementById('zone-display');
+      const descendLabel = document.getElementById('descend-label');
+      const depthEndpoint = document.getElementById('depth-endpoint');
+      const depthTicksContainer = document.getElementById('depth-ticks');
 
-const tickCount = 91;
-const tickItems = [];
+      const poolSize = 25;
+      const halfWindow = 12;
+      const totalTicks = 72;
+      const tickItems = [];
 
-if (depthTicksContainer) {
-  for (let i = 0; i < tickCount; i++) {
-    const row = document.createElement('div');
-    row.className = 'depth-tick-row';
-    const u = i / (tickCount - 1);
-    row.style.top = (u * 100).toFixed(4) + '%';
-
-    const line = document.createElement('div');
-    line.className = 'depth-tick-line';
-    row.appendChild(line);
-
-    depthTicksContainer.appendChild(row);
-    tickItems.push({
-      row,
-      line,
-      u,
-      tier: i % 10 === 0 ? 2 : (i % 5 === 0 ? 1 : 0)
-    });
-  }
-}
-
-const stage0 = document.getElementById('stage-0');
-const stage200 = document.getElementById('stage-200');
-const stage4000 = document.getElementById('stage-4000');
-const stage6000 = document.getElementById('stage-6000');
-const stageVoid = document.getElementById('stage-void');
-const stageRevTrack = document.getElementById('stage-revelation-track');
-
-const abyssTitle = document.getElementById('abyss-title');
-const chars = document.querySelectorAll('.abyss-char');
-const subtitle = document.getElementById('abyss-subtitle');
-const actions = document.getElementById('revelation-actions');
-const bottomNav = document.getElementById('bottom-nav');
-const dispMap = document.getElementById('current-displacement');
-const turbMap = document.getElementById('current-turbulence');
-
-const stages = [
-  { el: stage0, depth: 0 },
-  { el: stage200, depth: -200 },
-  { el: stage4000, depth: -4000 },
-  { el: stage6000, depth: -6000 },
-  { el: stageVoid, depth: -11000 }
-];
-
-function getZoneName(depth) {
-  if (depth >= -200) return 'SUNLIGHT ZONE';
-  if (depth >= -1000) return 'TWILIGHT ZONE';
-  if (depth >= -4000) return 'MIDNIGHT ZONE';
-  if (depth >= -6000) return 'ABYSSAL ZONE';
-  if (depth > -10500) return 'HADAL ZONE';
-  return 'CHALLENGER DEEP';
-}
-
-let targetGaugeRatio = 0;
-let smoothGaugeRatio = 0;
-let targetDepthMeters = 0;
-let smoothDepthMeters = 0;
-let isInfiniteState = false;
-
-function syncScrollTargets() {
-  const scrollTop = window.scrollY || document.documentElement.scrollTop;
-  const maxScroll = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
-  const s0Top = stage0 ? stage0.offsetTop : 0;
-  const sVoidTop = stageVoid ? stageVoid.offsetTop : 3000;
-
-  if (topbar) {
-    const isAtEnd = scrollTop >= (stageRevTrack ? stageRevTrack.offsetTop - 80 : maxScroll - 300);
-    if (isAtEnd) {
-      topbar.classList.add('hidden');
-    } else {
-      topbar.classList.remove('hidden');
-    }
-  }
-
-  if (scrollTop <= sVoidTop) {
-    const oceanRatio = sVoidTop > s0Top ? Math.min(Math.max((scrollTop - s0Top) / (sVoidTop - s0Top), 0), 1) : 0;
-    targetGaugeRatio = oceanRatio;
-    isInfiniteState = false;
-
-    let currentDepth = 0;
-    for (let i = 0; i < stages.length - 1; i++) {
-      const top1 = stages[i].el.offsetTop;
-      const top2 = stages[i + 1].el.offsetTop;
-      if (scrollTop >= top1 && scrollTop <= top2) {
-        const segRatio = top2 > top1 ? (scrollTop - top1) / (top2 - top1) : 0;
-        currentDepth = stages[i].depth + segRatio * (stages[i + 1].depth - stages[i].depth);
-        break;
-      } else if (scrollTop > top2 && i === stages.length - 2) {
-        currentDepth = -11000;
-      }
-    }
-    if (scrollTop < stages[0].el.offsetTop) {
-      currentDepth = 0;
-    }
-    targetDepthMeters = currentDepth;
-
-    if (descendLabel) {
-      if (scrollTop >= sVoidTop - 250) {
-        descendLabel.style.opacity = '0';
-        descendLabel.style.pointerEvents = 'none';
-      } else {
-        descendLabel.style.opacity = '1';
-        descendLabel.style.pointerEvents = 'auto';
-      }
-    }
-  } else {
-    const voidRatio = maxScroll > sVoidTop ? Math.min(Math.max((scrollTop - sVoidTop) / (maxScroll - sVoidTop), 0), 1) : 1;
-    targetGaugeRatio = 1;
-    targetDepthMeters = -11000;
-
-    if (descendLabel) {
-      descendLabel.style.opacity = '0';
-      descendLabel.style.pointerEvents = 'none';
-    }
-
-    isInfiniteState = voidRatio >= 0.35;
-  }
-}
-
-function renderGaugeDrum() {
-  if (!depthRail || depthRail.offsetWidth === 0) return;
-
-  smoothGaugeRatio += (targetGaugeRatio - smoothGaugeRatio) * 0.16;
-  if (Math.abs(targetGaugeRatio - smoothGaugeRatio) < 0.0001) {
-    smoothGaugeRatio = targetGaugeRatio;
-  }
-
-  smoothDepthMeters += (targetDepthMeters - smoothDepthMeters) * 0.18;
-  if (Math.abs(targetDepthMeters - smoothDepthMeters) < 0.5) {
-    smoothDepthMeters = targetDepthMeters;
-  }
-
-  const railRect = depthRail.getBoundingClientRect();
-  const trackerHeight = depthTracker.offsetHeight || 28;
-  const railTop = railRect.top;
-  const railHeight = railRect.height;
-
-  const activeY = railTop + smoothGaugeRatio * railHeight;
-  depthBar.style.height = (smoothGaugeRatio * 100).toFixed(2) + '%';
-
-  const roundedDepth = Math.round(smoothDepthMeters);
-  const atm = (1 + Math.abs(roundedDepth) * 0.1).toFixed(1);
-
-  if (isInfiniteState) {
-    depthDot.classList.add('lit');
-    depthDisplay.classList.add('infinite-mode');
-    depthDisplay.textContent = '-∞';
-    if (pressureDisplay) pressureDisplay.textContent = '∞ ATM';
-    zoneDisplay.textContent = 'THE ABYSS';
-    zoneDisplay.style.color = 'rgba(255, 255, 255, 0.75)';
-  } else {
-    depthDot.classList.remove('lit');
-    depthDisplay.classList.remove('infinite-mode');
-    depthDisplay.textContent = roundedDepth.toLocaleString() + 'm';
-    if (pressureDisplay) pressureDisplay.textContent = atm + ' ATM';
-    zoneDisplay.textContent = getZoneName(roundedDepth);
-    zoneDisplay.style.color = roundedDepth <= -10500 ? 'rgba(255, 255, 255, 0.45)' : 'rgba(255, 255, 255, 0.28)';
-  }
-
-  const sigma = 0.024;
-  const twoSigmaSq = 2 * sigma * sigma;
-
-  for (let i = 0; i < tickItems.length; i++) {
-    const item = tickItems[i];
-    const delta = item.u - smoothGaugeRatio;
-    const distSq = delta * delta;
-    const lens = Math.exp(-distSq / twoSigmaSq);
-
-    const drumAngle = (item.u - 0.5) * 0.78;
-    const drumCos = Math.max(0.45, Math.cos(drumAngle));
-
-    const spreadEnvelope = Math.exp(-distSq / 0.0045);
-    const yMagnify = (delta / sigma) * 1.15 * spreadEnvelope;
-    const xBulge = -lens * 0.9;
-
-    const baseWidth = item.tier === 2 ? 9 : (item.tier === 1 ? 6 : 3.5);
-    const magWidth = baseWidth + lens * (item.tier === 2 ? 2.5 : (item.tier === 1 ? 1.8 : 1.2));
-
-    const isPassed = item.u <= smoothGaugeRatio + 0.001;
-    const baseAlpha = item.tier === 2
-      ? (isPassed ? 0.30 : 0.17)
-      : (item.tier === 1 ? (isPassed ? 0.20 : 0.11) : (isPassed ? 0.13 : 0.065));
-
-    const finalAlpha = Math.min(0.92, (baseAlpha + lens * 0.62) * drumCos);
-
-    item.line.style.width = magWidth.toFixed(2) + 'px';
-    item.row.style.opacity = finalAlpha.toFixed(3);
-    item.row.style.transform = (lens > 0.01 || Math.abs(yMagnify) > 0.04)
-      ? 'translate3d(' + xBulge.toFixed(2) + 'px, ' + yMagnify.toFixed(2) + 'px, 0)'
-      : 'none';
-  }
-
-  const trackerY = activeY - (trackerHeight / 2);
-  depthTracker.style.transform = 'translate3d(0, ' + trackerY.toFixed(2) + 'px, 0)';
-}
-
-if (depthEndpoint) {
-  depthEndpoint.addEventListener('click', () => {
-    window.scrollTo({
-      top: document.documentElement.scrollHeight,
-      behavior: 'smooth'
-    });
-  });
-}
-
-let smoothP = 0;
-let isLockedClean = false;
-
-const charSeeds = [
-  { threshold: 0.04, span: 0.86, freq1: 11.5, phase1: 0.2, freq2: 6.8, phase2: 1.4, driftX: -6, driftY: 16 },
-  { threshold: 0.14, span: 0.80, freq1: 13.2, phase1: 2.1, freq2: 7.4, phase2: 0.5, driftX: 4, driftY: 22 },
-  { threshold: 0.00, span: 0.88, freq1: 10.4, phase1: 4.0, freq2: 5.9, phase2: 2.8, driftX: -2, driftY: 12 },
-  { threshold: 0.18, span: 0.78, freq1: 14.1, phase1: 1.1, freq2: 8.2, phase2: 3.7, driftX: 7, driftY: 24 },
-  { threshold: 0.09, span: 0.84, freq1: 12.3, phase1: 3.3, freq2: 6.3, phase2: 1.9, driftX: -5, driftY: 18 }
-];
-
-function renderFrame() {
-  renderGaugeDrum();
-
-  const scrollTop = window.scrollY || document.documentElement.scrollTop;
-  const maxScroll = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
-  const trackTop = stageRevTrack ? stageRevTrack.offsetTop - window.innerHeight * 0.25 : 3200;
-
-  let targetP = 0;
-  if (scrollTop > trackTop) {
-    targetP = Math.min(Math.max((scrollTop - trackTop) / (maxScroll - trackTop), 0), 1);
-  }
-
-  smoothP += (targetP - smoothP) * 0.14;
-  if (Math.abs(targetP - smoothP) < 0.0008) {
-    smoothP = targetP;
-  }
-
-  if (targetP >= 0.992 && smoothP >= 0.988) {
-    if (!isLockedClean) {
-      isLockedClean = true;
-      if (dispMap) dispMap.setAttribute('scale', '0');
-      if (abyssTitle) abyssTitle.style.filter = 'none';
-
-      for (let i = 0; i < chars.length; i++) {
-        chars[i].style.opacity = '1';
-        chars[i].style.filter = 'none';
-        chars[i].style.transform = 'none';
-        chars[i].style.textShadow = 'none';
-      }
-
-      if (subtitle) {
-        subtitle.style.opacity = '1';
-        subtitle.style.transform = 'none';
-        subtitle.style.filter = 'none';
-      }
-      if (actions) {
-        actions.style.opacity = '1';
-        actions.style.transform = 'none';
-      }
-      if (bottomNav) {
-        bottomNav.style.opacity = '1';
-      }
-    }
-    requestAnimationFrame(renderFrame);
-    return;
-  }
-
-  isLockedClean = false;
-
-  if (smoothP <= 0.002) {
-    if (abyssTitle) abyssTitle.style.filter = 'none';
-    for (let i = 0; i < chars.length; i++) {
-      chars[i].style.opacity = '0';
-      chars[i].style.filter = 'none';
-      chars[i].style.transform = 'none';
-      chars[i].style.textShadow = 'none';
-    }
-    if (subtitle) subtitle.style.opacity = '0';
-    if (actions) actions.style.opacity = '0';
-    if (bottomNav) bottomNav.style.opacity = '0';
-    requestAnimationFrame(renderFrame);
-    return;
-  }
-
-  const time = performance.now() * 0.001;
-  const settle = Math.min(Math.max((smoothP - 0.82) / 0.17, 0), 1);
-  const currentEnvelope = Math.pow(1 - smoothP, 1.35) * (1 - settle * 0.85);
-
-  if (dispMap && turbMap && abyssTitle) {
-    const dispScale = currentEnvelope * 34;
-    if (dispScale > 0.35) {
-      const freqX = (0.011 + Math.sin(smoothP * 6 + time * 0.4) * 0.002).toFixed(4);
-      const freqY = (0.045 + Math.cos(smoothP * 5 - time * 0.35) * 0.008).toFixed(4);
-      turbMap.setAttribute('baseFrequency', freqX + ' ' + freqY);
-      dispMap.setAttribute('scale', dispScale.toFixed(2));
-      abyssTitle.style.filter = 'url(#abyss-current-filter)';
-    } else {
-      dispMap.setAttribute('scale', '0');
-      abyssTitle.style.filter = 'none';
-    }
-  }
-
-  for (let i = 0; i < chars.length; i++) {
-    const c = charSeeds[i];
-    const rawLocal = Math.min(Math.max((smoothP - c.threshold) / c.span, 0), 1);
-    const baseEase = Math.pow(rawLocal, 1.85);
-
-    const wave1 = Math.sin(rawLocal * c.freq1 + c.phase1 + time * 0.9 * (1 - rawLocal));
-    const wave2 = Math.cos(rawLocal * c.freq2 + c.phase2 - time * 0.7 * (1 - rawLocal));
-    const pocket = (wave1 * 0.55 + wave2 * 0.45) * Math.sin(rawLocal * Math.PI);
-
-    const depthRemaining = Math.max(0, 1 - baseEase);
-    const nonUniformBlur = Math.max(0, (depthRemaining * 26 + Math.max(0, -pocket) * 11 * depthRemaining) * (1 - settle * 0.92));
-
-    const lightPulse = Math.max(0, baseEase + pocket * 0.28 * (1 - rawLocal * 0.6));
-    const opacity = Math.min(Math.max(lightPulse, 0), 1);
-
-    const brightness = 0.25 + 0.75 * baseEase + Math.max(0, pocket) * 0.35 * (1 - settle);
-    const driftFactor = Math.pow(depthRemaining, 1.5) * (1 - settle);
-    const tx = (c.driftX * driftFactor + wave2 * 3.5 * driftFactor).toFixed(2);
-    const ty = (c.driftY * driftFactor + wave1 * 5.0 * driftFactor).toFixed(2);
-
-    const halationStrength = Math.sin(rawLocal * Math.PI) * (1 - settle);
-    const halationBlur = (halationStrength * 22).toFixed(1);
-    const halationAlpha = (halationStrength * 0.38).toFixed(3);
-
-    chars[i].style.opacity = opacity.toFixed(3);
-    chars[i].style.transform = driftFactor > 0.005 ? 'translate3d(' + tx + 'px, ' + ty + 'px, 0)' : 'none';
-    chars[i].style.filter = nonUniformBlur > 0.15
-      ? 'blur(' + nonUniformBlur.toFixed(2) + 'px) brightness(' + brightness.toFixed(2) + ')'
-      : 'none';
-    chars[i].style.textShadow = halationStrength > 0.02
-      ? '0 0 ' + halationBlur + 'px rgba(255, 255, 255, ' + halationAlpha + ')'
-      : 'none';
-  }
-
-  if (subtitle) {
-    const subP = Math.min(Math.max((smoothP - 0.74) / 0.22, 0), 1);
-    const subEase = subP * subP * (3 - 2 * subP);
-    const subBlur = (1 - subEase) * 8;
-    subtitle.style.opacity = subEase.toFixed(3);
-    subtitle.style.transform = subEase < 0.995 ? 'translate3d(0, ' + ((1 - subEase) * 10).toFixed(2) + 'px, 0)' : 'none';
-    subtitle.style.filter = subBlur > 0.15 ? 'blur(' + subBlur.toFixed(2) + 'px)' : 'none';
-  }
-
-  if (actions) {
-    const actP = Math.min(Math.max((smoothP - 0.82) / 0.16, 0), 1);
-    const actEase = actP * actP * (3 - 2 * actP);
-    actions.style.opacity = actEase.toFixed(3);
-    actions.style.transform = actEase < 0.995 ? 'translate3d(0, ' + ((1 - actEase) * 8).toFixed(2) + 'px, 0)' : 'none';
-  }
-
-  if (bottomNav) {
-    const navP = Math.min(Math.max((smoothP - 0.86) / 0.13, 0), 1);
-    bottomNav.style.opacity = navP.toFixed(3);
-  }
-
-  requestAnimationFrame(renderFrame);
-}
-
-window.addEventListener('scroll', syncScrollTargets, { passive: true });
-window.addEventListener('resize', syncScrollTargets);
-window.addEventListener('orientationchange', syncScrollTargets);
-window.addEventListener('DOMContentLoaded', () => {
-  syncScrollTargets();
-  requestAnimationFrame(renderFrame);
-});
-window.addEventListener('load', syncScrollTargets);
-syncScrollTargets();
-
-function updateEditableSnippetMode() {
-  const isMobile = window.innerWidth <= 768 || (window.matchMedia && window.matchMedia('(max-width: 768px)').matches) || ('ontouchstart' in window && window.innerWidth <= 1024);
-  document.querySelectorAll('.code-box pre code').forEach(el => {
-    if (isMobile) {
-      el.removeAttribute('contenteditable');
-      el.removeAttribute('spellcheck');
-    } else {
-      try {
-        el.contentEditable = 'plaintext-only';
-      } catch (err) {
-        el.contentEditable = 'true';
-      }
-      el.setAttribute('spellcheck', 'false');
-      el.setAttribute('autocapitalize', 'off');
-      el.setAttribute('autocomplete', 'off');
-      el.setAttribute('autocorrect', 'off');
-    }
-  });
-}
-
-updateEditableSnippetMode();
-window.addEventListener('resize', updateEditableSnippetMode);
-window.addEventListener('orientationchange', updateEditableSnippetMode);
-
-document.querySelectorAll('.code-box pre code').forEach(el => {
-  el.addEventListener('keydown', (e) => {
-    if (!el.isContentEditable) return;
-    if (e.key === 'Tab') {
-      e.preventDefault();
-      if (!document.execCommand('insertText', false, '    ')) {
-        const sel = window.getSelection();
-        if (sel && sel.rangeCount > 0) {
-          const range = sel.getRangeAt(0);
-          range.deleteContents();
-          const node = document.createTextNode('    ');
-          range.insertNode(node);
-          range.setStartAfter(node);
-          range.collapse(true);
-          sel.removeAllRanges();
-          sel.addRange(range);
+      if (depthTicksContainer) {
+        for (let i = 0; i < poolSize; i++) {
+          const row = document.createElement('div');
+          row.className = 'depth-tick-row';
+          const line = document.createElement('div');
+          line.className = 'depth-tick-line';
+          row.appendChild(line);
+          depthTicksContainer.appendChild(row);
+          tickItems.push({
+            slot: i,
+            row: row,
+            line: line
+          });
         }
       }
-    }
-  });
-});
 
-document.querySelectorAll('.run-code-btn').forEach(btn => {
-  btn.addEventListener('click', async () => {
-    const targetId = btn.getAttribute('data-target');
-    const codeEl = document.getElementById(targetId);
-    const outBox = document.getElementById('output-' + targetId);
-    const outText = document.getElementById('text-' + targetId);
-    const outTime = document.getElementById('time-' + targetId);
-    if (!codeEl || !outBox || !outText) return;
+      const stage0 = document.getElementById('stage-0');
+      const stage200 = document.getElementById('stage-200');
+      const stage4000 = document.getElementById('stage-4000');
+      const stage6000 = document.getElementById('stage-6000');
+      const stageVoid = document.getElementById('stage-void');
+      const stageRevelation = document.getElementById('stage-revelation');
 
-    const originalContent = btn.innerHTML;
-    btn.disabled = true;
-    btn.innerHTML = '<span class="run-spinner"></span><span>Running...</span>';
+      const stages = [
+        { el: stage0, depth: 0 },
+        { el: stage200, depth: -200 },
+        { el: stage4000, depth: -4000 },
+        { el: stage6000, depth: -6000 },
+        { el: stageVoid, depth: -11000 }
+      ];
 
-    try {
-      const code = codeEl.innerText !== undefined ? codeEl.innerText : codeEl.textContent;
-      const res = await AbyssEnv.run(code);
+      function getZoneName(depth) {
+        if (depth >= -200) return 'SUNLIGHT ZONE';
+        if (depth >= -1000) return 'TWILIGHT ZONE';
+        if (depth >= -4000) return 'MIDNIGHT ZONE';
+        if (depth >= -6000) return 'ABYSSAL ZONE';
+        if (depth > -10500) return 'HADAL ZONE';
+        return 'CHALLENGER DEEP';
+      }
 
-      outBox.hidden = false;
-      outText.textContent = res.output || '[program exited with code ' + res.exitCode + ']';
-      outText.className = res.exitCode === 0 ? 'output-text' : 'output-text error';
-      if (outTime) outTime.textContent = res.elapsed + ' ms';
-    } catch (err) {
-      outBox.hidden = false;
-      outText.textContent = 'Execution failed: ' + err.message;
-      outText.className = 'output-text error';
-    } finally {
-      btn.disabled = false;
-      btn.innerHTML = originalContent;
-    }
-  });
-});
-</script>
+      let targetGaugeRatio = 0;
+      let smoothGaugeRatio = 0;
+      let targetDepthMeters = 0;
+      let smoothDepthMeters = 0;
+      let isInfiniteState = false;
+
+      function syncScrollTargets() {
+        const scrollTop = window.scrollY || document.documentElement.scrollTop;
+        const maxScroll = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
+        const s0Top = stage0 ? stage0.offsetTop : 0;
+        const sVoidTop = stageVoid ? stageVoid.offsetTop : 3000;
+        const abyssTop = stageRevelation ? Math.min(maxScroll, stageRevelation.offsetTop) : maxScroll;
+
+        targetGaugeRatio = abyssTop > s0Top
+          ? Math.min(Math.max((scrollTop - s0Top) / (abyssTop - s0Top), 0), 1)
+          : 0;
+
+        if (scrollTop <= sVoidTop) {
+          isInfiniteState = false;
+
+          let currentDepth = 0;
+          for (let i = 0; i < stages.length - 1; i++) {
+            const top1 = stages[i].el.offsetTop;
+            const top2 = stages[i + 1].el.offsetTop;
+            if (scrollTop >= top1 && scrollTop <= top2) {
+              const segRatio = top2 > top1 ? (scrollTop - top1) / (top2 - top1) : 0;
+              currentDepth = stages[i].depth + segRatio * (stages[i + 1].depth - stages[i].depth);
+              break;
+            } else if (scrollTop > top2 && i === stages.length - 2) {
+              currentDepth = -11000;
+            }
+          }
+          if (scrollTop < stages[0].el.offsetTop) currentDepth = 0;
+          targetDepthMeters = currentDepth;
+
+          const hideDescend = scrollTop >= sVoidTop - 250;
+          if (descendLabel) {
+            descendLabel.style.opacity = hideDescend ? '0' : '1';
+          }
+          if (depthEndpoint) {
+            depthEndpoint.style.pointerEvents = hideDescend ? 'none' : 'auto';
+          }
+        } else {
+          const voidRatio = abyssTop > sVoidTop ? Math.min(Math.max((scrollTop - sVoidTop) / (abyssTop - sVoidTop), 0), 1) : 1;
+          targetDepthMeters = -11000;
+          if (descendLabel) descendLabel.style.opacity = '0';
+          if (depthEndpoint) depthEndpoint.style.pointerEvents = 'none';
+          isInfiniteState = voidRatio >= 0.35;
+        }
+      }
+
+      function renderGauge() {
+        smoothGaugeRatio += (targetGaugeRatio - smoothGaugeRatio) * 0.16;
+        if (Math.abs(targetGaugeRatio - smoothGaugeRatio) < 0.0004) smoothGaugeRatio = targetGaugeRatio;
+
+        smoothDepthMeters += (targetDepthMeters - smoothDepthMeters) * 0.18;
+        if (Math.abs(targetDepthMeters - smoothDepthMeters) < 0.5) smoothDepthMeters = targetDepthMeters;
+
+        const roundedDepth = Math.round(smoothDepthMeters);
+        const atm = (1 + Math.abs(roundedDepth) * 0.1).toFixed(1);
+
+        if (isInfiniteState) {
+          if (depthDisplay) depthDisplay.textContent = '-∞';
+          if (pressureDisplay) pressureDisplay.textContent = '∞ ATM';
+          if (zoneDisplay) zoneDisplay.textContent = 'THE ABYSS';
+        } else {
+          if (depthDisplay) depthDisplay.textContent = roundedDepth.toLocaleString('en-US') + 'm';
+          if (pressureDisplay) pressureDisplay.textContent = atm + ' ATM';
+          if (zoneDisplay) zoneDisplay.textContent = getZoneName(roundedDepth);
+        }
+
+        const phase = smoothGaugeRatio * totalTicks;
+        const baseFloor = Math.floor(phase) - halfWindow;
+
+        for (let i = 0; i < tickItems.length; i++) {
+          const item = tickItems[i];
+          const tickIndex = baseFloor + item.slot;
+          const offset = tickIndex - phase;
+
+          if (tickIndex < 0 || tickIndex > totalTicks || offset < -halfWindow || offset > halfWindow) {
+            item.row.style.opacity = '0';
+            continue;
+          }
+
+          const d = offset / halfWindow;
+          const theta = d * (Math.PI * 0.47);
+          const cosT = Math.max(0.04, Math.cos(theta));
+          const yPercent = 50 + Math.sin(theta) * 50;
+
+          const tier = tickIndex % 6 === 0 ? 2 : (tickIndex % 3 === 0 ? 1 : 0);
+          const baseWidth = tier === 2 ? 10 : (tier === 1 ? 6 : 3);
+          const projWidth = baseWidth * (0.35 + 0.65 * cosT);
+          const baseAlpha = tier === 2 ? 0.88 : (tier === 1 ? 0.45 : 0.22);
+          const projAlpha = baseAlpha * Math.pow(cosT, 1.5);
+
+          item.row.style.top = yPercent.toFixed(3) + '%';
+          item.row.style.opacity = projAlpha.toFixed(3);
+          item.line.style.width = projWidth.toFixed(2) + 'px';
+        }
+
+        requestAnimationFrame(renderGauge);
+      }
+
+      if (depthEndpoint) {
+        depthEndpoint.addEventListener('click', function () {
+          const targetTop = stageRevelation ? stageRevelation.offsetTop : document.documentElement.scrollHeight;
+          window.scrollTo({ top: targetTop, behavior: 'smooth' });
+        });
+      }
+
+      window.addEventListener('scroll', syncScrollTargets, { passive: true });
+      window.addEventListener('resize', syncScrollTargets);
+      window.addEventListener('orientationchange', syncScrollTargets);
+      window.addEventListener('load', syncScrollTargets);
+      syncScrollTargets();
+      requestAnimationFrame(renderGauge);
+
+      const overscrollGlow = document.getElementById('android-overscroll-glow');
+      const abyssCluster = document.getElementById('abyss-center-cluster');
+      const stageSubAbyss = document.getElementById('stage-sub-abyss');
+      const stageEasterEgg = document.getElementById('stage-easter-egg');
+
+      let easterEggUnlocked = false;
+      let overscrollCount = 0;
+      let lastAttemptTime = 0;
+      let glowResetTimer = null;
+      let countResetTimer = null;
+      let touchStartY = null;
+      const UNLOCK_THRESHOLD = 18;
+
+      function isAtBottom() {
+        const scrollTop = window.scrollY || document.documentElement.scrollTop;
+        const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+        return maxScroll > 0 && scrollTop >= maxScroll - 12;
+      }
+
+      function triggerOverscrollAttempt() {
+        if (easterEggUnlocked || !isAtBottom()) return;
+
+        const now = Date.now();
+        if (now - lastAttemptTime < 160) return;
+        lastAttemptTime = now;
+
+        overscrollCount += 1;
+        const progress = Math.min(overscrollCount / UNLOCK_THRESHOLD, 1);
+
+        if (overscrollGlow) {
+          overscrollGlow.style.opacity = (0.28 + progress * 0.44).toFixed(2);
+          overscrollGlow.style.transform = 'scaleY(' + (0.45 + progress * 0.45).toFixed(2) + ')';
+        }
+        if (abyssCluster) {
+          abyssCluster.style.transform = 'translateY(' + (-1.5 - progress * 4.5).toFixed(1) + 'px)';
+        }
+
+        clearTimeout(glowResetTimer);
+        glowResetTimer = setTimeout(function () {
+          if (overscrollGlow) {
+            overscrollGlow.style.opacity = '0';
+            overscrollGlow.style.transform = 'scaleY(0.2)';
+          }
+          if (abyssCluster) {
+            abyssCluster.style.transform = 'translateY(0)';
+          }
+        }, 200);
+
+        clearTimeout(countResetTimer);
+        countResetTimer = setTimeout(function () {
+          overscrollCount = 0;
+        }, 2400);
+
+        if (overscrollCount >= UNLOCK_THRESHOLD) {
+          easterEggUnlocked = true;
+          clearTimeout(glowResetTimer);
+          clearTimeout(countResetTimer);
+
+          if (overscrollGlow) {
+            overscrollGlow.style.opacity = '0';
+            overscrollGlow.style.transform = 'scaleY(0.2)';
+          }
+          if (abyssCluster) {
+            abyssCluster.style.transform = 'translateY(0)';
+          }
+
+          if (stageSubAbyss) stageSubAbyss.classList.remove('hidden');
+          if (stageEasterEgg) stageEasterEgg.classList.remove('hidden');
+
+          requestAnimationFrame(function () {
+            window.scrollTo({
+              top: document.documentElement.scrollHeight,
+              behavior: 'smooth'
+            });
+          });
+        }
+      }
+
+      window.addEventListener('wheel', function (e) {
+        if (!easterEggUnlocked && e.deltaY > 12 && isAtBottom()) {
+          triggerOverscrollAttempt();
+        }
+      }, { passive: true });
+
+      window.addEventListener('touchstart', function (e) {
+        if (e.touches && e.touches.length > 0) {
+          touchStartY = e.touches[0].clientY;
+        }
+      }, { passive: true });
+
+      window.addEventListener('touchmove', function (e) {
+        if (!easterEggUnlocked && touchStartY !== null && e.touches && e.touches.length > 0) {
+          const deltaY = touchStartY - e.touches[0].clientY;
+          if (deltaY > 24 && isAtBottom()) {
+            triggerOverscrollAttempt();
+            touchStartY = e.touches[0].clientY;
+          }
+        }
+      }, { passive: true });
+
+      window.addEventListener('keydown', function (e) {
+        if (!easterEggUnlocked && isAtBottom() && (e.key === 'ArrowDown' || e.key === 'PageDown' || e.key === ' ')) {
+          triggerOverscrollAttempt();
+        }
+      });
+
+      function updateEditableSnippetMode() {
+        const isCoarsePointer = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
+        const isMobile = window.innerWidth <= 768 || (window.matchMedia && window.matchMedia('(max-width: 768px)').matches) || (isCoarsePointer && window.innerWidth <= 1024);
+        document.querySelectorAll('.code-box pre code').forEach(function (el) {
+          if (isMobile) {
+            el.removeAttribute('contenteditable');
+            el.removeAttribute('spellcheck');
+          } else {
+            try {
+              el.contentEditable = 'plaintext-only';
+            } catch (err) {
+              el.contentEditable = 'true';
+            }
+            el.setAttribute('spellcheck', 'false');
+            el.setAttribute('autocapitalize', 'off');
+            el.setAttribute('autocomplete', 'off');
+            el.setAttribute('autocorrect', 'off');
+          }
+        });
+      }
+
+      updateEditableSnippetMode();
+      window.addEventListener('resize', updateEditableSnippetMode);
+      window.addEventListener('orientationchange', updateEditableSnippetMode);
+
+      async function runCodeSnippet(targetId, triggerBtn) {
+        const codeEl = document.getElementById(targetId);
+        const outBox = document.getElementById('output-' + targetId);
+        const outText = document.getElementById('text-' + targetId);
+        const outTime = document.getElementById('time-' + targetId);
+        if (!codeEl || !outBox || !outText) return;
+
+        const codeBox = codeEl.closest('.code-box');
+        if (codeBox) codeBox.classList.add('is-interacted');
+
+        const btn = triggerBtn || document.querySelector('.run-code-btn[data-target="' + targetId + '"]');
+        const originalHtml = btn ? btn.innerHTML : '';
+        if (btn) {
+          btn.disabled = true;
+          btn.innerHTML = '<span class="run-spinner" aria-hidden="true"></span>';
+        }
+
+        try {
+          const code = codeEl.innerText !== undefined ? codeEl.innerText : codeEl.textContent;
+          const res = await AbyssEnv.run(code);
+
+          outBox.classList.remove('hidden');
+          outText.textContent = res.output || '[program exited with code ' + res.exitCode + ']';
+          outText.className = res.exitCode === 0
+            ? 'font-code text-[13px] sm:text-code-md text-primary whitespace-pre-wrap break-words'
+            : 'font-code text-[13px] sm:text-code-md text-on-surface-variant whitespace-pre-wrap break-words';
+          if (outTime) outTime.textContent = res.elapsed + ' ms';
+        } catch (err) {
+          outBox.classList.remove('hidden');
+          outText.textContent = 'Execution failed: ' + err.message;
+          outText.className = 'font-code text-[13px] sm:text-code-md text-on-surface-variant whitespace-pre-wrap break-words';
+          if (outTime) outTime.textContent = '';
+        } finally {
+          if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = originalHtml;
+          }
+        }
+      }
+
+      document.querySelectorAll('.code-box pre code').forEach(function (el) {
+        el.addEventListener('input', function () {
+          const box = el.closest('.code-box');
+          if (box) box.classList.add('is-interacted');
+        });
+
+        el.addEventListener('keydown', function (e) {
+          if (!el.isContentEditable) return;
+          if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+            e.preventDefault();
+            runCodeSnippet(el.id);
+            return;
+          }
+          if (e.key === 'Tab') {
+            e.preventDefault();
+            if (!document.execCommand('insertText', false, '    ')) {
+              const sel = window.getSelection();
+              if (sel && sel.rangeCount > 0) {
+                const range = sel.getRangeAt(0);
+                range.deleteContents();
+                const node = document.createTextNode('    ');
+                range.insertNode(node);
+                range.setStartAfter(node);
+                range.collapse(true);
+                sel.removeAllRanges();
+                sel.addRange(range);
+              }
+            }
+          }
+        });
+      });
+
+      document.querySelectorAll('.run-code-btn').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          const targetId = btn.getAttribute('data-target');
+          if (targetId) runCodeSnippet(targetId, btn);
+        });
+      });
+
+      window.addEventListener('load', function () {
+        if (window.AbyssEnv && typeof window.AbyssEnv.load === 'function') {
+          const warmUp = function () {
+            window.AbyssEnv.load().catch(function () {});
+          };
+          if ('requestIdleCallback' in window) {
+            window.requestIdleCallback(warmUp, { timeout: 2500 });
+          } else {
+            setTimeout(warmUp, 600);
+          }
+        }
+      });
+    })();
+  </script>
 </body>
 </html>
